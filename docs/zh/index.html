@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh" itemscope itemtype="https://schema.org/SoftwareApplication">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>pgAdmin III — native macOS PostgreSQL admin tool</title>
+<meta name="description" content="pgAdmin III — classic native desktop PostgreSQL administration tool. Native macOS (Apple Silicon) build with Homebrew Cask support, dark mode, 45 languages." />
+<meta name="keywords" content="pgAdmin3,pgAdmin III,PostgreSQL,admin tool,database manager,macOS,native,Apple Silicon,Homebrew,wxWidgets,open source" />
+<meta name="robots" content="index, follow" />
+<meta name="author" content="heptau" />
+<link rel="canonical" href="https://pgadmin3.80.cz/zh/" />
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<link rel="sitemap" type="application/xml" href="https://pgadmin3.80.cz/sitemap.xml" />
+<!-- hreflang for all 12 supported languages -->
+<link rel="alternate" hreflang="ca" href="https://pgadmin3.80.cz/ca/" />
+<link rel="alternate" hreflang="cs" href="https://pgadmin3.80.cz/cs/" />
+<link rel="alternate" hreflang="de" href="https://pgadmin3.80.cz/de/" />
+<link rel="alternate" hreflang="en" href="https://pgadmin3.80.cz/en/" />
+<link rel="alternate" hreflang="es" href="https://pgadmin3.80.cz/es/" />
+<link rel="alternate" hreflang="fr" href="https://pgadmin3.80.cz/fr/" />
+<link rel="alternate" hreflang="ja" href="https://pgadmin3.80.cz/ja/" />
+<link rel="alternate" hreflang="lv" href="https://pgadmin3.80.cz/lv/" />
+<link rel="alternate" hreflang="pl" href="https://pgadmin3.80.cz/pl/" />
+<link rel="alternate" hreflang="ru" href="https://pgadmin3.80.cz/ru/" />
+<link rel="alternate" hreflang="sr" href="https://pgadmin3.80.cz/sr/" />
+<link rel="alternate" hreflang="zh" href="https://pgadmin3.80.cz/zh/" />
+<link rel="alternate" hreflang="x-default" href="https://pgadmin3.80.cz/" />
+<!-- Open Graph -->
+<meta property="og:title" content="pgAdmin III — native macOS PostgreSQL admin tool" />
+<meta property="og:description" content="Classic native desktop PostgreSQL administration tool. Native macOS (Apple Silicon) build with Homebrew Cask support." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://pgadmin3.80.cz/zh/" />
+<meta property="og:image" content="https://pgadmin3.80.cz/assets/screenshot.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="800" />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:site_name" content="pgAdmin III" />
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="pgAdmin III — native macOS PostgreSQL admin tool" />
+<meta name="twitter:description" content="Classic native desktop PostgreSQL administration tool. Native macOS (Apple Silicon) build." />
+<meta name="twitter:image" content="https://pgadmin3.80.cz/assets/screenshot.png" />
+<!-- Preconnect hints -->
+<link rel="preconnect" href="https://github.com" />
+<link rel="preconnect" href="https://api.github.com" />
+<!-- Structured data for AI agents, search engines, and knowledge graphs -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "pgAdmin III",
+  "alternateName": "pgAdmin3",
+  "operatingSystem": "macOS (Apple Silicon arm64), Linux, Windows",
+  "applicationCategory": "DatabaseApplication",
+  "applicationSubCategory": "PostgreSQL Administration Tool",
+  "description": "Classic native desktop PostgreSQL administration and development platform. Community fork of the original pgAdmin III with native macOS port for Apple Silicon.",
+  "url": "https://pgadmin3.80.cz/",
+  "downloadUrl": "https://github.com/heptau/pgadmin3/releases",
+  "softwareHelp": "https://github.com/heptau/pgadmin3/blob/main/AGENTS.md",
+  "softwareVersion": "2026.07.14",
+  "dateModified": "2026-07-14",
+  "license": "https://opensource.org/licenses/postgresql",
+  "author": {
+    "@type": "Organization",
+    "name": "heptau",
+    "url": "https://github.com/heptau"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Native macOS on Apple Silicon",
+    "PostgreSQL 12–18 support",
+    "SQL Editor with syntax highlighting",
+    "Query Tool with named bookmarks",
+    "Cross-server schema comparison",
+    "Server monitoring and AWR reports",
+    "SVG HiDPI/Retina toolbar",
+    "45 languages with editable .po sources",
+    "Plugin extensibility",
+    "SSL/TLS and SSH tunneling"
+  ],
+  "screenshot": "https://pgadmin3.80.cz/assets/screenshot.png",
+  "memoryRequirements": "64 MB",
+  "storageRequirements": "50 MB",
+  "releaseNotes": "https://github.com/heptau/pgadmin3/blob/main/CHANGELOG.md"
+}
+</script>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="../assets/theme-switcher.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">pgAdmin <span>III</span></div>
+  <div class="nav-links">
+    <div class="dropdown" data-dropdown="lang">
+      <button class="dropdown-trigger" aria-label="Change language" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </button>
+      <div class="dropdown-menu">
+        <button class="dropdown-option" data-lang-value="auto">
+          <span class="dropdown-option-icon">🌐</span>
+          <span>Auto</span>
+        </button>
+          <button class="dropdown-option" data-lang-value="ca">
+            <span class="dropdown-option-icon">🇦🇩</span>
+            <span>Català</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="cs">
+            <span class="dropdown-option-icon">🇨🇿</span>
+            <span>Čeština</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="de">
+            <span class="dropdown-option-icon">🇩🇪</span>
+            <span>Deutsch</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="en">
+            <span class="dropdown-option-icon">🇬🇧</span>
+            <span>English</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="es">
+            <span class="dropdown-option-icon">🇪🇸</span>
+            <span>Español</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="fr">
+            <span class="dropdown-option-icon">🇫🇷</span>
+            <span>Français</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="ja">
+            <span class="dropdown-option-icon">🇯🇵</span>
+            <span>日本語</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="lv">
+            <span class="dropdown-option-icon">🇱🇻</span>
+            <span>Latviešu</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="pl">
+            <span class="dropdown-option-icon">🇵🇱</span>
+            <span>Polski</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="ru">
+            <span class="dropdown-option-icon">🇷🇺</span>
+            <span>Русский</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="sr">
+            <span class="dropdown-option-icon">🇷🇸</span>
+            <span>Српски</span>
+          </button>
+          <button class="dropdown-option" data-lang-value="zh">
+            <span class="dropdown-option-icon">🇨🇳</span>
+            <span>中文</span>
+          </button>
+      </div>
+    </div>
+    <div class="dropdown" data-dropdown="theme">
+      <button class="dropdown-trigger" aria-label="Change theme" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18V4c4.42 0 8 3.58 8 8s-3.58 8-8 8z"></path>
+        </svg>
+      </button>
+      <div class="dropdown-menu">
+        <button class="dropdown-option" data-theme-value="auto">
+          <span class="dropdown-option-icon">🖥️</span>
+          <span>Auto</span>
+        </button>
+        <button class="dropdown-option" data-theme-value="light">
+          <span class="dropdown-option-icon">☀️</span>
+          <span>Light</span>
+        </button>
+        <button class="dropdown-option" data-theme-value="dark">
+          <span class="dropdown-option-icon">🌙</span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h1>pgAdmin <span>III</span></h1>
+    <p>经典原生桌面PostgreSQL管理工具 — 现已提供原生macOS（Apple Silicon）版本。</p>
+    <div class="btn-group">
+      <a class="btn" href="#install">通过Homebrew安装</a>
+      <a class="btn btn-outline" href="https://github.com/heptau/pgadmin3" target="_blank">源代码</a>
+    </div>
+  </div>
+</div>
+
+<main class="container">
+
+<section id="about">
+  <h2><a href="#about">#</a> 关于</h2>
+  <p><strong>pgAdmin III</strong>是最受欢迎的PostgreSQL开源管理和开发平台。原项目已停止开发，转而支持基于Web的pgAdmin 4，但这个<strong>社区分支</strong>延续了原生wxWidgets应用程序的生命——为现代PostgreSQL版本修复错误并添加了数十项新功能。</p>
+  <p>本版本引入了适用于Apple Silicon（arm64）的<strong>完全原生macOS移植版</strong>，通过Homebrew Cask作为自包含的<code>.app</code>捆绑包分发。</p>
+  <ul>
+    <li><strong>License:</strong> PostgreSQL许可证（宽松的BSD式许可证）</li>
+    <li><strong>仓库:</strong> <a href="https://github.com/heptau/pgadmin3" target="_blank">github.com/heptau/pgadmin3</a></li>
+    <li><strong>上游分支:</strong> <a href="https://github.com/levinsv/pgadmin3" target="_blank">levinsv/pgadmin3</a> (支持PostgreSQL 18)</li>
+    <li><strong>原始项目:</strong> <a href="https://github.com/postgres/pgadmin3" target="_blank">postgres/pgadmin3</a> (archived)</li>
+  </ul>
+</section>
+
+<section id="screenshot">
+  <h2><a href="#screenshot">#</a> 截图</h2>
+  <img class="screenshot" src="../assets/screenshot.png" alt="macOS上的pgAdmin III主窗口">
+</section>
+
+<section id="features">
+  <h2><a href="#features">#</a> 主要功能</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>🖥️ 原生macOS</h3>
+      <p>基于wxWidgets 3.3 + Cocoa构建的真正原生应用。无需Electron，无需Java——内存占用低，启动速度快。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🐘 PostgreSQL 12–18</h3>
+      <p>全面支持最新PostgreSQL版本、PostgresPro Enterprise、Slony-I复制以及pgAgent调度。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🔍 SQL编辑器</h3>
+      <p>语法高亮、光标下语句自动识别、自动保存标签页、多结果窗口、PCRE文本转换。</p>
+    </div>
+    <div class="feature-card">
+      <h3>📊 查询工具</h3>
+      <p>命名书签、基于外键的JOIN自动补全、可读性优化的大数字显示、单元格比较差异视图。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🔄 Schema工具</h3>
+      <p>跨服务器对象比较与HTML差异报告、基于GitLab的版本控制、通过amcheck进行B-tree索引检查。</p>
+    </div>
+    <div class="feature-card">
+      <h3>📈 监控</h3>
+      <p>服务器状态/活动窗口、进程高亮、等待事件采样（pg_wait_sampling）、AWR报告、CSV日志查看器。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🎨 SVG工具栏</h3>
+      <p>现代化SVG工具栏图标，支持HiDPI/Retina，可针对不同服务器进行颜色编码。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🌐 本地化</h3>
+      <p>内置11种语言，全部提供可编辑的.po源文件。捷克语、西班牙语、德语、法语、俄语、波兰语、中文和拉脱维亚语的缺失内容已在v2026.07.14中补全。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🔌 插件</h3>
+      <p>可通过插件模块扩展——无需修改核心即可添加自定义功能。</p>
+    </div>
+    <div class="feature-card">
+      <h3>🔐 SSL / SSH</h3>
+      <p>SSL/TLS连接加密和SSH隧道（libssh2），确保服务器访问安全。</p>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <h2><a href="#install">#</a> 安装</h2>
+
+  <h3>macOS（Apple Silicon）— 最快路径</h3>
+  <p>通过Homebrew Cask获取预编译二进制文件：</p>
+  <pre>brew install heptau/tap/pgadmin3</pre>
+  <p>从Launchpad、Spotlight或终端启动：</p>
+  <pre>open /Applications/pgAdmin\ III.app</pre>
+
+  <h3>从源码构建（macOS）</h3>
+  <pre>git clone https://github.com/heptau/pgadmin3.git
+cd pgadmin3
+make build
+open "build-macos/pgAdmin III.app"</pre>
+  <p><strong>注意：</strong>首次构建需要本地编译的wxWidgets 3.3（使用<code>--disable-std_containers</code>）。Homebrew的预编译包不兼容——详情请参阅<a href="https://github.com/heptau/pgadmin3/blob/main/AGENTS.md" target="_blank">AGENTS.md</a>。</p>
+
+  <h3>Linux</h3>
+  <pre>git clone https://github.com/heptau/pgadmin3.git
+cd pgadmin3
+make build
+./build/pgAdmin3</pre>
+
+  <h3>Windows</h3>
+  <p>在Visual Studio中打开<code>pgAdmin3.vcxproj</code>，或在Linux上使用mingw进行交叉编译——请参阅<a href="https://github.com/heptau/pgadmin3/blob/main/INSTALL_EN.txt" target="_blank">INSTALL_EN.txt</a>。</p>
+</section>
+
+<section id="changelog">
+  <h2><a href="#changelog">#</a> 更新内容</h2>
+  <p>Version <strong>v2026.07.14</strong>:</p>
+  <ul>
+    <li>所有11种内置语言现在都配有可编辑的<code>.po</code>源文件</li>
+    <li>俄语、波兰语、中文（zh_CN）和拉脱维亚语翻译——已补全新字符串</li>
+    <li>捷克语、西班牙语、德语、法语的本地化已全部完成</li>
+    <li>原生macOS构建（arm64），支持Homebrew Cask分发</li>
+    <li>深色/浅色模式——实时配色切换</li>
+    <li>Retina工具栏图标</li>
+    <li>支持PostgreSQL 18</li>
+    <li>完整更新日志: <a href="https://github.com/heptau/pgadmin3/blob/main/CHANGELOG.md" target="_blank">CHANGELOG.md</a></li>
+  </ul>
+</section>
+
+<section id="support">
+  <h2><a href="#support">#</a> 支持与文档</h2>
+  <ul>
+    <li><a href="https://github.com/heptau/pgadmin3/issues" target="_blank">错误报告和功能请求</a> — GitHub Issues</li>
+    <li><a href="https://github.com/heptau/pgadmin3/blob/main/AGENTS.md" target="_blank">AGENTS.md</a> — macOS移植工作笔记</li>
+    <li><a href="https://github.com/heptau/pgadmin3/blob/main/INSTALL_EN.txt" target="_blank">INSTALL_EN.txt</a> — 详细构建说明</li>
+    <li><a href="https://github.com/heptau/pgadmin3/blob/main/CHANGELOG.md" target="_blank">CHANGELOG.md</a> — 完整变更历史</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p>pgAdmin III根据<a href="https://github.com/heptau/pgadmin3/blob/main/LICENSE" target="_blank">PostgreSQL许可证</a>发布。</p>
+    <p>由<a href="https://github.com/heptau">heptau</a>维护 · <a href="https://github.com/heptau/pgadmin3">GitHub</a></p>
+  </div>
+</footer>
+
+<script src="../assets/dropdown.js"></script>
+<script src="../assets/lang-switcher.js"></script>
+</body>
+</html>

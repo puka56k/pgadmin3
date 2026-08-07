@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Page Not Found — pgAdmin III</title>
+<meta name="robots" content="noindex, follow" />
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/theme-switcher.js"></script>
+<style>
+main.notfound {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 100px 24px 120px;
+  text-align: center;
+}
+.notfound .code {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.notfound h1 { font-size: 2rem; margin-bottom: 16px; }
+.notfound p { color: var(--muted); }
+.notfound .btn-group { justify-content: center; margin-top: 28px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">pgAdmin <span>III</span></div>
+  <div class="nav-links">
+    <div class="dropdown" data-dropdown="theme">
+      <button class="dropdown-trigger" aria-label="Change theme" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18V4c4.42 0 8 3.58 8 8s-3.58 8-8 8z"></path>
+        </svg>
+      </button>
+      <div class="dropdown-menu">
+        <button class="dropdown-option" data-theme-value="auto">
+          <span class="dropdown-option-icon">🖥️</span>
+          <span>Auto</span>
+        </button>
+        <button class="dropdown-option" data-theme-value="light">
+          <span class="dropdown-option-icon">☀️</span>
+          <span>Light</span>
+        </button>
+        <button class="dropdown-option" data-theme-value="dark">
+          <span class="dropdown-option-icon">🌙</span>
+          <span>Dark</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="notfound">
+  <div class="code">404</div>
+  <h1>This page doesn't exist</h1>
+  <p>The link you followed may be broken, or the page may have moved. Try the homepage or the GitHub repository instead.</p>
+  <div class="btn-group">
+    <a class="btn" href="/">Homepage</a>
+    <a class="btn btn-outline" href="https://github.com/heptau/pgadmin3" target="_blank">GitHub</a>
+  </div>
+</main>
+
+<script src="assets/dropdown.js"></script>
+</body>
+</html>

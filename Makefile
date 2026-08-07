@@ -17,8 +17,21 @@ BUILD_DIR_MACOS   ?= build-macos
 BUILD_DIR_LINUX   ?= build
 JOBS              ?= $(shell (command -v nproc >/dev/null 2>&1 && nproc) || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
+# --- Docs typography (TypoLima, https://typolima.80.cz) ---
+# Language codes for which translated docs exist under docs/<code>/ AND which
+# TypoLima itself supports (it has no rules for ja/lv/sr/zh, so those are
+# skipped here even though docs/ has them -- keep in sync with both
+# lang-switcher.js's language list and `typolima --help`'s --lang list).
+DOCS_LANGS = ca cs de en es fr pl ru
+
+PYUSERBASE := $(shell python3 -m site --user-base 2>/dev/null)
+TYPOLIMA := $(shell command -v typolima 2>/dev/null)
+ifeq ($(strip $(TYPOLIMA)),)
+	TYPOLIMA := $(PYUSERBASE)/bin/typolima
+endif
+
 .DEFAULT_GOAL := help
-.PHONY: help build run release clean pngc
+.PHONY: help build run release clean pngc docs-typo docs-typo-dry _ensure_typolima
 
 help:
 	@echo "pgAdmin3 build helper (detected OS: $(UNAME_S))"
@@ -30,6 +43,8 @@ ifeq ($(UNAME_S),Darwin)
 endif
 	@echo "  make pngc    - regenerate .pngc embedded-image headers from .png files"
 	@echo "  make clean   - remove build output"
+	@echo "  make docs-typo-dry - preview TypoLima typography fixes for docs/<lang> ($(DOCS_LANGS))"
+	@echo "  make docs-typo     - apply TypoLima typography fixes in-place, same languages"
 ifeq ($(UNAME_S),Darwin)
 	@echo ""
 	@echo "macOS build uses (override any of these as VAR=... make build):"
@@ -99,3 +114,32 @@ build run release clean:
 	@exit 1
 
 endif
+
+# --- DOCS TYPOGRAPHY (TypoLima, https://typolima.80.cz) ---
+# OS-independent: docs/ is plain HTML, only needs python3/pip.
+
+# Install the TypoLima CLI (pip --user) if it isn't already available, so
+# these targets don't require it pre-installed on PATH.
+_ensure_typolima:
+	@if [ ! -x "$(TYPOLIMA)" ]; then \
+		echo "Installing TypoLima CLI..."; \
+		pip install --user git+https://github.com/heptau/typolima.git; \
+	fi
+
+# Preview typography fixes (smart quotes, non-breaking spaces, dashes, ...)
+# for every translated docs/<lang>/ directory without touching any file.
+docs-typo-dry: _ensure_typolima
+	@for lang in $(DOCS_LANGS); do \
+		echo "=== docs/$$lang ($$lang) ==="; \
+		$(TYPOLIMA) docs/$$lang --lang $$lang --recursive --dry-run --diff --preserve-format; \
+	done
+
+# Apply typography fixes in-place for every translated docs/<lang>/
+# directory. Changes land as regular working-tree edits -- review with
+# `git diff docs/` before committing.
+docs-typo: _ensure_typolima
+	@for lang in $(DOCS_LANGS); do \
+		echo "-> docs/$$lang ($$lang)"; \
+		$(TYPOLIMA) docs/$$lang --lang $$lang --recursive --in-place --preserve-format; \
+	done
+	@echo "Done. Review changes with: git diff docs/"
