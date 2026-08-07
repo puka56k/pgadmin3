@@ -5,8 +5,23 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [2026.07.21]
+### Added
+- Export to file in the query tool now supports PostgreSQL's COPY format
+  (text mode), honouring the "column names" flag, encoding, and line
+  endings.
+- The database comparison report now applies the `diff_cleanupSemantic`
+  cleanup pass for cleaner diff output.
 
+### Changed
+- The comparison dialog's word-by-word mode was replaced with a
+  line-by-line comparison ("Lines compare"), which produces more accurate
+  diffs for multi-line source objects.
+
+### Fixed
+- Fixed Alt+E in the query result grid: the E key no longer leaks through
+  as a grid search keystroke when Alt+E opens the export dialog.
+- Fixed a crash when repeatedly pressing the query-execution key while a
+  query was already running — re-execution is now refused while busy.
 
 ## [2026.07.21]
 
