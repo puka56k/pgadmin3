@@ -5,6 +5,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2026.08.07]
+
 ### Added
 - Export to file in the query tool now supports PostgreSQL's COPY format
   (text mode), honouring the "column names" flag, encoding, and line
