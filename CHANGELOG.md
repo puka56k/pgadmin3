@@ -13,6 +13,18 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   are migrated into the secret store on first connect.
 - Added a `far2l` plugin integration (via NetRocks connect) for opening a
   configured server connection directly from far2l.
+- Releases now also publish a portable Windows zip
+  (`pgAdmin3-<version>-windows-x64.zip`), assembled from the committed
+  `x64/Release/` build via the new `windows/package_release.sh`
+  (`make build-win`). It bundles guru hint HTML docs for all 18 languages
+  that have them (previously not shipped in `x64/Release/` at all) and
+  fills in the `wxstd.mo` wx-stock-string catalog for 34 languages that
+  were missing one, sourced from the original pgadmin-org/pgadmin3 project
+  (vendored under `i18n/wx-stock/`). Note: this zip is built from the
+  `x64/Release/pgAdmin3.exe`/DLLs tracked in this repo's `master` branch
+  (the upstream levinsv/pgadmin3 fork this project pulls fixes from) and
+  may lag behind the fixes and features in this fork's `main` branch/macOS
+  build.
 
 ### Fixed
 - Fixed the query tab counter incorrectly resetting/misparsing tab titles

@@ -4,7 +4,10 @@
 #   make          - show this help
 #   make build    - configure + build (macOS: also assembles a .app bundle)
 #   make run      - run a quick dev build directly (no .app bundling)
-#   make release  - macOS only: build, zip, tag, GitHub release, Homebrew tap
+#   make release  - macOS only: build, zip (macOS + Windows), tag, GitHub
+#                   release, Homebrew tap
+#   make build-win - package a portable Windows zip only (any OS, no
+#                    compiler needed -- see windows/package_release.sh)
 #   make clean    - remove build output
 
 UNAME_S := $(shell uname -s)
@@ -31,7 +34,9 @@ ifeq ($(strip $(TYPOLIMA)),)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help build run release clean pngc docs-typo docs-typo-dry _ensure_typolima
+.PHONY: help build run release clean pngc docs-typo docs-typo-dry _ensure_typolima build-win
+
+WINDOWS_RELEASE_VERSION ?= $(shell date +%Y.%m.%d)
 
 help:
 	@echo "pgAdmin3 build helper (detected OS: $(UNAME_S))"
@@ -39,10 +44,14 @@ help:
 	@echo "  make build   - configure + build pgAdmin3$(if $(filter Darwin,$(UNAME_S)), (also assembles a .app bundle),)"
 	@echo "  make run     - run a quick dev build directly (no .app bundling)"
 ifeq ($(UNAME_S),Darwin)
-	@echo "  make release - build, zip, tag, GitHub release + Homebrew tap update"
+	@echo "  make release - build, zip (macOS + Windows), tag, GitHub release + Homebrew tap update"
 endif
-	@echo "  make pngc    - regenerate .pngc embedded-image headers from .png files"
-	@echo "  make clean   - remove build output"
+	@echo "  make pngc     - regenerate .pngc embedded-image headers from .png files"
+	@echo "  make build-win - package a portable Windows zip from the committed"
+	@echo "                   x64/Release/ build (no Windows/compiler needed --"
+	@echo "                   see windows/package_release.sh). Override version"
+	@echo "                   with WINDOWS_RELEASE_VERSION=... (default: today's date)"
+	@echo "  make clean    - remove build output"
 	@echo "  make docs-typo-dry - preview TypoLima typography fixes for docs/<lang> ($(DOCS_LANGS))"
 	@echo "  make docs-typo     - apply TypoLima typography fixes in-place, same languages"
 ifeq ($(UNAME_S),Darwin)
@@ -70,6 +79,9 @@ endif
 
 pngc:
 	bash macos/png2c.sh
+
+build-win:
+	./windows/package_release.sh "$(WINDOWS_RELEASE_VERSION)"
 
 ifeq ($(UNAME_S),Darwin)
 

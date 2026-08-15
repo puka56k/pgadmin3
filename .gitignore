@@ -25,6 +25,7 @@ ctl/ctlMonitorWidget.cpp
 include/ctl/ctlMonitorWidget.h
 build/*
 build-macos/*
+build-windows/*
 .DS_Store
 *~
 *.bak

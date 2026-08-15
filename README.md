@@ -97,6 +97,23 @@ Linux.
 Open `pgAdmin3.vcxproj` in Visual Studio, or cross-compile from Linux with
 mingw — see [INSTALL_EN.txt](INSTALL_EN.txt).
 
+A pre-built portable zip is also published on every
+[GitHub release](https://github.com/heptau/pgadmin3/releases)
+(`pgAdmin3-<version>-windows-x64.zip`) — no build tools needed, just unzip
+and run `pgAdmin3.exe`. It's assembled by `make build-win` /
+[`windows/package_release.sh`](windows/package_release.sh) from the
+`x64/Release/` build already tracked in this repo, with guru hint docs and
+extra `wxstd.mo` translations layered in (see
+[`i18n/wx-stock/README.md`](i18n/wx-stock/README.md)).
+
+**Note:** the `pgAdmin3.exe`/DLLs in `x64/Release/` come from this
+project's `master` branch, which tracks the original author's fork
+([levinsv/pgadmin3](https://github.com/levinsv/pgadmin3), configured here
+as the `upstream` remote) — so this zip reflects *that* build, not
+necessarily every fix or feature that's landed in this fork's `main`
+branch or macOS build. It does, however, include the extra languages and
+hint documentation curated in this project.
+
 ## Repository layout
 
 The source tree mirrors pgAdmin III's original module split: `frm/`

@@ -18,13 +18,19 @@
 #   4. Tags v<version>, pushes the tag + the changelog commit to `origin`
 #      (never `upstream` -- see AGENTS.md's branching strategy: this repo
 #      pulls from upstream but only ever pushes to the user's own fork).
-#   5. If a GitHub release for this tag already exists, skip straight to
-#      reusing its already-uploaded zip's checksum (see "GitHub release"
-#      comment below for why). Otherwise: build the app (`make build`),
-#      re-stamp Info.plist with the release version, zip it, compute its
-#      checksum, and create the GitHub release with the extracted changelog
-#      notes and the zip/checksum as assets.
-#   6. Generates and pushes an updated Homebrew Cask to the heptau/homebrew-tap
+#   5. Packages a portable Windows zip (windows/package_release.sh) from the
+#      committed x64/Release/ build -- no Windows/compiler involved, just
+#      bundling in guru hints and supplementary wxstd.mo catalogs it's
+#      missing. Always rebuilt (cheap, fully reproducible from committed
+#      sources); only the upload is skipped if already attached to an
+#      existing release.
+#   6. If a GitHub release for this tag already exists, skip straight to
+#      reusing its already-uploaded macOS zip's checksum (see "GitHub
+#      release" comment below for why). Otherwise: build the app (`make
+#      build`), re-stamp Info.plist with the release version, zip it,
+#      compute its checksum, and create the GitHub release with the
+#      extracted changelog notes and both zips/checksums as assets.
+#   7. Generates and pushes an updated Homebrew Cask to the heptau/homebrew-tap
 #      repo, via the GitHub API (no local clone needed).
 #
 # Environment variables:
@@ -168,6 +174,22 @@ echo ""
 ZIP_NAME="pgAdmin3-${VERSION}-macos-arm64.zip"
 ZIP_PATH="${DIST_DIR}/${ZIP_NAME}"
 
+# ── Windows zip ──────────────────────────────────────────────────────────────
+# Doesn't need Windows or a compiler -- x64/Release/ already carries a
+# pre-built .exe + DLLs (committed separately by whoever last built on
+# Windows); this just packages that folder plus guru hints and supplementary
+# wxstd.mo catalogs it's missing today (see windows/package_release.sh).
+# Cheap and fully reproducible from committed sources, so unlike the macOS
+# build there's no reason to skip it when resuming -- just rebuild it always
+# and only skip the *upload* if it's already attached to an existing release.
+echo "==> Packaging Windows zip..."
+./windows/package_release.sh "$VERSION" "$DIST_DIR"
+echo ""
+
+WIN_ZIP_NAME="pgAdmin3-${VERSION}-windows-x64.zip"
+WIN_ZIP_PATH="${DIST_DIR}/${WIN_ZIP_NAME}"
+WIN_SHA="$(awk '{print $1}' "${DIST_DIR}/${WIN_ZIP_NAME%.zip}.sha256")"
+
 # ── GitHub release ────────────────────────────────────────────────────────────
 # Idempotent: a previous run may have created the tag/release already (e.g.
 # this script failed on a later step, like the Homebrew tap update below) --
@@ -190,6 +212,12 @@ if gh release view "$TAG" --repo "$REPO_SLUG" >/dev/null 2>&1; then
 		echo "  https://github.com/${REPO_SLUG}/releases/tag/${TAG}"
 		exit 1
 	fi
+	if gh release view "$TAG" --repo "$REPO_SLUG" --json assets --jq '.assets[].name' | grep -qx "$WIN_ZIP_NAME"; then
+		echo "==> ${WIN_ZIP_NAME} already attached to ${TAG} -- skipping upload."
+	else
+		echo "==> Uploading ${WIN_ZIP_NAME} to existing release ${TAG}..."
+		gh release upload "$TAG" --repo "$REPO_SLUG" "$WIN_ZIP_PATH"
+	fi
 else
 	echo "==> Building (this may take a while)..."
 	make build
@@ -200,7 +228,7 @@ else
 	echo "==> Zipping ${ZIP_NAME}..."
 	rm -f "$ZIP_PATH"
 	(cd "$BUILD_DIR" && zip -rq "dist/${ZIP_NAME}" "pgAdmin III.app")
-	(cd "$DIST_DIR" && shasum -a 256 "$ZIP_NAME" > checksums.txt)
+	(cd "$DIST_DIR" && shasum -a 256 "$ZIP_NAME" "$WIN_ZIP_NAME" > checksums.txt)
 	SHA_ARM="$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')"
 	echo ""
 
@@ -209,7 +237,7 @@ else
 		--repo "$REPO_SLUG" \
 		--title "pgAdmin3 ${TAG}" \
 		--notes-file "$NOTES_FILE" \
-		"$ZIP_PATH" "${DIST_DIR}/checksums.txt"
+		"$ZIP_PATH" "$WIN_ZIP_PATH" "${DIST_DIR}/checksums.txt"
 fi
 echo ""
 
