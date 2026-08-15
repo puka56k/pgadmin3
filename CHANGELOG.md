@@ -5,6 +5,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [2026.08.16]
+
 ### Added
 - Optional encrypted OS credential vault for stored server passwords, via
   the `GetStoreTypePass` setting (0 = pgpass, 1 = pgpass + secret store,
