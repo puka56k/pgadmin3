@@ -5,6 +5,22 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Optional encrypted OS credential vault for stored server passwords, via
+  the `GetStoreTypePass` setting (0 = pgpass, 1 = pgpass + secret store,
+  2 = secret store only). On Linux this requires wxWidgets built with
+  `libsecret` support. When enabled, passwords already present in `pgpass`
+  are migrated into the secret store on first connect.
+- Added a `far2l` plugin integration (via NetRocks connect) for opening a
+  configured server connection directly from far2l.
+
+### Fixed
+- Fixed the query tab counter incorrectly resetting/misparsing tab titles
+  that didn't start with the literal word "Query".
+
+### Changed
+- Updated the CI cmake workflow to use the `wx3.2.4` CodeLite repository.
+
 ## [2026.08.07]
 
 ### Added
