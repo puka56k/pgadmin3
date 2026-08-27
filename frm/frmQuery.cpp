@@ -432,10 +432,10 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 	menuBar->Append(editMenu, _("&Edit"));
 
 	queryMenu = new wxMenu();
-	queryMenu->Append(MNU_EXECUTE, _("&Execute\tF8"), _("Execute query"));
-	queryMenu->Append(MNU_EXECUTE_2, _("&Execute new output\tShift-F8"), _("Execute query in new output"));
+	queryMenu->Append(MNU_EXECUTE, _("&Execute\tF5"), _("Execute query"));
+	queryMenu->Append(MNU_EXECUTE_2, _("&Execute new output\tShift-F5"), _("Execute query in new output"));
 	queryMenu->Append(MNU_EXECPGS, _("Execute &pgScript\tF6"), _("Execute pgScript"));
-	queryMenu->Append(MNU_EXECFILE, _("Execute to file\tF5"), _("Execute query, write result to file"));
+	queryMenu->Append(MNU_EXECFILE, _("Execute to file\tF8"), _("Execute query, write result to file"));
 	queryMenu->Append(MNU_EXPLAIN, _("E&xplain\tF7"), _("Explain query"));
 	queryMenu->Append(MNU_EXPLAINANALYZE, _("Explain analyze\tShift-F7"), _("Explain and analyze query"));
 
@@ -582,14 +582,14 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 	entries[idx++].Set(wxACCEL_CTRL, (int)'S', MNU_SAVE);
 	entries[idx++].Set(wxACCEL_CTRL, (int)'F', MNU_FIND);
 	entries[idx++].Set(wxACCEL_CTRL, (int)'R', MNU_REPLACE);
-	entries[idx++].Set(wxACCEL_NORMAL, WXK_F8, MNU_EXECUTE);
+	entries[idx++].Set(wxACCEL_NORMAL, WXK_F5, MNU_EXECUTE);
 	entries[idx++].Set(wxACCEL_NORMAL, WXK_F7, MNU_EXPLAIN);
 	entries[idx++].Set(wxACCEL_ALT, WXK_PAUSE, MNU_CANCEL);
 	entries[idx++].Set(wxACCEL_CTRL, (int)'A', MNU_SELECTALL);
 	entries[idx++].Set(wxACCEL_NORMAL, WXK_F1, MNU_HELP);
 	entries[idx++].Set(wxACCEL_CTRL, (int)'N', MNU_NEW);
 	entries[idx++].Set(wxACCEL_NORMAL, WXK_F6, MNU_EXECPGS);
-	entries[idx++].Set(wxACCEL_NORMAL, WXK_F5, MNU_EXECFILE);
+	entries[idx++].Set(wxACCEL_NORMAL, WXK_F8, MNU_EXECFILE);
 	entries[idx++].Set(wxACCEL_CTRL, (int)'T', MNU_NEWSQLTAB);
 
 	entries[idx++].Set(wxACCEL_CTRL, (int)'1', MNU_GENERATESQL+1);
