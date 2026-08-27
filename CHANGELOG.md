@@ -46,6 +46,20 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `wxSYS_COLOUR_WINDOW`.
 
 ### Fixed
+- Query tool: switching SQL tabs left the output pane showing whatever ran
+  last, so the results on screen belonged to a different tab than the editor
+  in front of you. Each SQL tab now owns its Data Output grid, its Messages
+  text and its Explain output; switching tabs switches all three, and the
+  other tabs' results stay live rather than being cleared or recomputed.
+  History remains shared, being a session log with its own save/clear
+  commands. Output also no longer follows the query: a query completing on a
+  tab you have already left no longer drags the output pane away from the tab
+  you moved to — that tab gets a marker instead, cleared when you next visit
+  it. Two long-standing leaks are fixed along the way: `OnSqlBookPageClosed()`
+  was an empty function and `SqlBookDisconnectPage()` released only the editor
+  pointer, so a closed tab left its output page behind and its slot could
+  never be reused — which is why "Execute new output" (`Shift+F5`) silently
+  stopped working after ten uses in a session.
 - Result-row striping read as "green rows and black rows" under a dark
   appearance instead of as a stripe. One function was serving two jobs:
   `RowHighlightOk()` is semantic in explain plans (green = standard node,
