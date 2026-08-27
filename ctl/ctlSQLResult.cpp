@@ -206,7 +206,7 @@ void ctlSQLResult::DisplayData(bool single)
 	for(int row = 0; row < NumRows(); ++row) {
 	    if (row%2==0) {
 			    wxGridCellAttr* pAttr = new wxGridCellAttr;
-			    pAttr->SetBackgroundColour(RowHighlightOk());
+			    pAttr->SetBackgroundColour(RowStripe());
 				
 				pAttr->SetAlignment(h,v);
 				SetRowAttr(row,pAttr);

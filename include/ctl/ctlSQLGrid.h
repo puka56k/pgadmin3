@@ -53,6 +53,13 @@ public:
     static wxColour RowHighlightOk();    // "fine" / already-executed rows
     static wxColour RowHighlightWarn();  // "look here" / multi-line values
 
+    // Decorative zebra striping for result rows. Deliberately NOT the same as
+    // RowHighlightOk(): that one carries meaning (explain plans use it for
+    // "standard node" against RowHighlightWarn()'s "look here"), while this
+    // one only helps the eye track a row across wide output and must stay
+    // near-invisible.
+    static wxColour RowStripe();
+
     wxString GetColumnName(int colNum);
     wxSize GetBestSize(int row, int col);
     void OnLabelDoubleClick(wxGridEvent& event);

@@ -139,6 +139,19 @@ wxColour ctlSQLGrid::RowHighlightWarn()
     return sysSettings::IsDarkAppearance() ? wxColour(74, 68, 30)
                                            : wxColour(248, 240, 130);
 }
+
+wxColour ctlSQLGrid::RowStripe()
+{
+    // The light stripe is a 1.07:1 whisper against white - that ratio is the
+    // spec, not the hue. A dark stripe built by darkening the same green
+    // landed at 1.43:1 and, because it differed in hue rather than lightness,
+    // read as "green rows and black rows" instead of a stripe. #1B1F1C is
+    // 1.075:1 against the #171717 macOS dark cell background, keeps a trace of
+    // the green, and leaves the selection colour visible on top of it
+    // (2.00:1, versus 1.50:1 for the old value).
+    return sysSettings::IsDarkAppearance() ? wxColour(0x1B, 0x1F, 0x1C)
+                                           : wxColour(224, 255, 224);
+}
 void ctlSQLGrid::OnGridSelectCell(wxGridEvent& evt) {
     int row = evt.GetRow();
     //int col = evt.GetCol();
