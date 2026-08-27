@@ -44,6 +44,10 @@ if(NOT CROSS_COMPILE)
 	    link_libraries(${PostgreSQL_LIBRARIES})
             message(STATUS "path postgresql= ${PostgreSQL_LIBRARIES}")
 	endif()
+	# native MinGW build still needs winsock for WSAStartup()/gethostname()
+	if(WIN32)
+	    link_libraries(ws2_32)
+	endif()
      add_compile_definitions(WX_PRECOMP)
 else()
 #windows
@@ -80,9 +84,9 @@ add_executable(${PROJECT_NAME} )
 if(NOT APPLE)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E echo "Extracting debug symbols..."
-    COMMAND objcopy --only-keep-debug ${PROJECT_NAME} ${PROJECT_NAME}.debug
-    COMMAND objcopy --strip-debug ${PROJECT_NAME}
-    COMMAND objcopy --add-gnu-debuglink=${PROJECT_NAME}.debug ${PROJECT_NAME}
+    COMMAND objcopy --only-keep-debug $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.debug
+    COMMAND objcopy --strip-debug $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND objcopy --add-gnu-debuglink=${PROJECT_NAME}.debug $<TARGET_FILE:${PROJECT_NAME}>
     COMMENT "Split debug symbols into separate .debug file"
     VERBATIM
 )
@@ -97,6 +101,12 @@ if(CROSS_COMPILE STREQUAL "Windows")
     "<CMAKE_RC_COMPILER> <FLAGS> -v -O coff -I ${WXWIN}/include <DEFINES> -i <SOURCE> -o <OBJECT>")
   target_sources(${PROJECT_NAME} PRIVATE ${RC_FILE})
   message(STATUS "Use RC file ${RC_FILE}")
+elseif(WIN32)
+  # native MinGW build: compile the same resources (app icon, version info,
+  # wx.rc -> per-monitor DPI aware v2 manifest + common controls v6)
+  enable_language(RC)
+  target_sources(${PROJECT_NAME} PRIVATE pgAdmin3.rc)
+  message(STATUS "Use RC file pgAdmin3.rc (native windres)")
 endif()
 
 if (PRECOMP_FILE)
