@@ -46,6 +46,17 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `wxSYS_COLOUR_WINDOW`.
 
 ### Fixed
+- Result-row striping read as "green rows and black rows" under a dark
+  appearance instead of as a stripe. One function was serving two jobs:
+  `RowHighlightOk()` is semantic in explain plans (green = standard node,
+  yellow = worth a look) and was *also* used for plain `row%2` zebra striping
+  in the result grid. The light code had the same conflation but got away with
+  it, since `#E0FFE0` on white is a 1.07:1 whisper; deriving a dark variant
+  from that green gave 1.43:1 and differed in hue rather than lightness. The
+  decorative use is now `RowStripe()` — unchanged `#E0FFE0` in light mode,
+  `#1B1F1C` in dark (1.075:1, matching the light ratio). This also fixes row
+  selection being hard to see: macOS's dark selection background sat at 1.50:1
+  against the old stripe and is 2.00:1 against the new one.
 - macOS: `settings.ini` was never copied into the `.app`, so
   `LocatePath(SETTINGS_INI, true)` found nothing and the app used hard-coded
   defaults only for anything the user had not overridden. It now ships in
