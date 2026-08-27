@@ -4625,6 +4625,10 @@ void frmQuery::TabOutShow(int idx)
 // the pool, which the original fixed-array code never did.
 void frmQuery::TabOutRelease(ctlSQLBox *box)
 {
+	// Reshaping the output pane while the frame is being torn down walks straight
+	// into wxAuiManager::Update() laying out freed windows.
+	if (closing) return;
+
 	int idx = TabOutFind(box);
 	if (idx <= 0) return;
 
@@ -4810,6 +4814,7 @@ void frmQuery::OnSqlBookPageClosed(wxAuiNotebookEvent &event)
 	// never be reused. SqlBookDisconnectPage() covers the paths that run before
 	// the page is gone; TabOutRelease() is idempotent, so calling it again for
 	// any tab that is no longer in the book is safe.
+	if (closing) return;
 	for (size_t i = 1; i < tabOut.size(); i++)
 	{
 		ctlSQLBox *box = tabOut[i].box;
@@ -4993,7 +4998,7 @@ void frmQuery::SqlBookAddPage(wxString& title)
 	sqlQuery->SetDefFunction(name_func, def_func);
 }
 
-void frmQuery::SqlBookDisconnectPage(ctlSQLBox *box)
+void frmQuery::SqlBookDisconnectPage(ctlSQLBox *box, bool releaseOutput)
 {
 	if (box == NULL)
 		box = sqlQuery;
@@ -5004,8 +5009,8 @@ void frmQuery::SqlBookDisconnectPage(ctlSQLBox *box)
 		box->Disconnect(wxID_ANY, wxEVT_KILL_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
 		// Used to null only the box pointer, leaving the grid and its output page
 		// behind forever - the slot could then never be reused.
-		TabOutRelease(box);
-
+		if (releaseOutput)
+			TabOutRelease(box);
 	}
 }
 
@@ -5166,7 +5171,7 @@ bool frmQuery::SqlBookClose(bool canVeto)
 	{
 		box = wxDynamicCast(sqlQueryBook->GetPage(i), ctlSQLBox);
 		if (box != NULL)
-			SqlBookDisconnectPage(box);
+			SqlBookDisconnectPage(box, false);
 	}
 
 	return false;

@@ -46,6 +46,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `wxSYS_COLOUR_WINDOW`.
 
 ### Fixed
+- Query tool: closing the window could crash (SIGSEGV in
+  `wxTabFrame::DoSizing()` under `wxAuiManager::Update()`). Introduced by the
+  per-SQL-tab output change below: `SqlBookClose()` runs
+  `SqlBookDisconnectPage()` over every tab as part of the close sequence, so
+  releasing a tab's output slot from there meant repeated
+  RemovePage/InsertPage/Destroy on the output pane while the frame was being
+  torn down, and the `manager.Update()` that follows then laid out freed
+  windows. `SqlBookClose()` never deletes pages — the frame's own `Destroy()`
+  takes the whole child hierarchy with it — so there is nothing to release on
+  that path.
 - Query tool: switching SQL tabs left the output pane showing whatever ran
   last, so the results on screen belonged to a different tab than the editor
   in front of you. Each SQL tab now owns its Data Output grid, its Messages

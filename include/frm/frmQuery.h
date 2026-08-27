@@ -345,7 +345,10 @@ private:
 	void SqlBookSetViewLineNumbers(bool b);
 	void SqlBookSetDatabase(pgConn *con);
 	void SqlBookUpdatePageTitle();
-	void SqlBookDisconnectPage(ctlSQLBox *box = NULL);
+	// releaseOutput=false when the whole window is going away: the frame's own
+	// Destroy() tears every child down, so touching the output pane's pages
+	// during the close sequence is both pointless and unsafe.
+	void SqlBookDisconnectPage(ctlSQLBox *box = NULL, bool releaseOutput = true);
 	bool SqlBookClose(bool canVeto);
 	// SQL tabs event handlers
 	void OnSqlBookAddPage(wxCommandEvent &event);
