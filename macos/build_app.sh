@@ -154,6 +154,15 @@ if [ -f "$REPO_ROOT/x64/Release/textcompare_report.template" ]; then
 	cp "$REPO_ROOT/x64/Release/textcompare_report.template" "$SHAREDSUPPORT_DIR/"
 fi
 
+# settings.ini supplies the built-in defaults for any setting the user hasn't
+# overridden. LocatePath(SETTINGS_INI, true) looks for it under dataDir, which
+# is the same Contents/SharedSupport as i18n above -- so without this copy the
+# file that ships next to pgAdmin3.exe on Windows has no macOS equivalent and
+# `Settings INI` logs as empty.
+if [ -f "$REPO_ROOT/settings.ini" ]; then
+	cp "$REPO_ROOT/settings.ini" "$SHAREDSUPPORT_DIR/"
+fi
+
 # Guru Hint HTML pages + documentation. frmHint::GetPage() builds paths as
 # docPath + "/<locale>/hints/<hintPage>.html" where docPath resolves to
 # Contents/SharedSupport/docs/ on macOS (see LocatePath() in pgAdmin3.cpp,
