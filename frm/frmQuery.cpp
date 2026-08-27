@@ -689,7 +689,7 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 	btnDeleteAll->Enable(sqlQueries->GetCount() > 0);
 	boxHistory->Add(btnDeleteAll, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 	boxQuery->Add(boxHistory, 0, wxEXPAND | wxALL, 1);
-	boxHistory->ShowItems(!settings->GetHideQueryHistory());
+	boxHistory->ShowItems(!settings->GetHideQueryHistory() && settings->GetSaveQueryHistory());
 	// Create the other inner box sizer
 	// This one will contain the SQL box
 	wxBoxSizer *boxSQL = new wxBoxSizer(wxHORIZONTAL);
@@ -3856,7 +3856,8 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 		}
 	}
 
-	if (sqlResult->RunStatus() == PGRES_TUPLES_OK || sqlResult->RunStatus() == PGRES_COMMAND_OK)
+	if (settings->GetSaveQueryHistory() &&
+	        (sqlResult->RunStatus() == PGRES_TUPLES_OK || sqlResult->RunStatus() == PGRES_COMMAND_OK))
 	{
 		// Get the executed query
 		wxString executedQuery = sqlQueryExec->GetSelectedText();
@@ -4283,6 +4284,9 @@ void frmQuery::LoadQueries()
 	xmlNodePtr cur;
 	xmlChar *key;
 
+	if (!settings->GetSaveQueryHistory())
+		return;
+
 	if (!wxFile::Access(settings->GetHistoryFile(), wxFile::read))
 		return;
 
@@ -4355,6 +4359,9 @@ void frmQuery::SaveQueries()
 {
 	size_t i;
 	xmlTextWriterPtr writer;
+
+	if (!settings->GetSaveQueryHistory())
+		return;
 
 	writer = xmlNewTextWriterFilename((const char *)settings->GetHistoryFile().mb_str(wxConvUTF8), 0);
 	if (!writer)

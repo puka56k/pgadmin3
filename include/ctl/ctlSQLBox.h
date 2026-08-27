@@ -55,6 +55,7 @@ public:
 	void SetDatabase(pgConn *db);
 	wxString TextToHtml(int start, int end, bool isAddNewLine=false, const std::vector<FSQL::complite_element> &listobj = {});
 	void Copy();
+	void Paste();
 	void OnKeyDown(wxKeyEvent &event);
 	void OnAutoComplete(wxCommandEvent &event);
 	void OnSearchReplace(wxCommandEvent &event);
@@ -129,6 +130,7 @@ protected:
 	int caretWidth = 1;
 	wxTimer* refreshUITimer;
 private:
+	void ReportPasteCleaned(int fragments);
 	void SetCaretWidthForKeyboardLayout();
 	void OnPositionStc(wxStyledTextEvent &event);
 	void OnDoubleClick(wxStyledTextEvent &event);

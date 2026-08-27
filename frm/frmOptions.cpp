@@ -83,6 +83,7 @@
 #define chkNumberPretty 		    CTRL_CHECKBOX("chkNumberPretty")
 #define txtIndent                   CTRL_TEXT("txtIndent")
 #define chkSpacesForTabs			CTRL_CHECKBOX("chkSpacesForTabs")
+#define chkCleanPasteSQL			CTRL_CHECKBOX("chkCleanPasteSQL")
 #define cbCopyQuote					CTRL_COMBOBOX("cbCopyQuote")
 #define cbCopyQuoteChar				CTRL_COMBOBOX("cbCopyQuoteChar")
 #define cbCopySeparator				CTRL_COMBOBOX("cbCopySeparator")
@@ -115,6 +116,7 @@
 #define pickerExtAlignCmd          CTRL_FILEPICKER("pickerExtAlignCmd")
 #define txtHistoryMaxQueries        CTRL_TEXT("txtHistoryMaxQueries")
 #define txtHistoryMaxQuerySize      CTRL_TEXT("txtHistoryMaxQuerySize")
+#define chkSaveQueryHistory         CTRL_CHECKBOX("chkSaveQueryHistory")
 #define txtWidthCaretKeyboardLayout      CTRL_TEXT("txtWidthCaretKeyboardLayout")
 #define chkSQLUseSystemBackgroundColour  CTRL_CHECKBOX("chkSQLUseSystemBackgroundColour")
 #define chkCaretUseSystemBackgroundColour  CTRL_CHECKBOX("chkCaretUseSystemBackgroundColour")
@@ -320,6 +322,7 @@ frmOptions::frmOptions(frmMain *parent)
 	chkShowDBnameTree->SetValue(settings->GetVisibleDbNameTree());
 	txtIndent->SetValue(NumToStr(settings->GetIndentSpaces()));
 	chkSpacesForTabs->SetValue(settings->GetSpacesForTabs());
+	chkCleanPasteSQL->SetValue(settings->GetCleanPasteSQL());
 	cbCopyQuote->SetSelection(settings->GetCopyQuoting());
 	cbCopyQuoteChar->SetValue(settings->GetCopyQuoteChar());
 	cbRefreshOnClick->SetSelection(settings->GetRefreshOnClick());
@@ -370,6 +373,7 @@ frmOptions::frmOptions(frmMain *parent)
 
 	txtHistoryMaxQueries->SetValue(NumToStr(settings->GetHistoryMaxQueries()));
 	txtHistoryMaxQuerySize->SetValue(NumToStr(settings->GetHistoryMaxQuerySize()));
+	chkSaveQueryHistory->SetValue(settings->GetSaveQueryHistory());
 	txtWidthCaretKeyboardLayout->SetValue(NumToStr((long)settings->GetWidthCaretForKeyboardLayout()));
 	chkSQLUseSystemBackgroundColour->SetValue(settings->GetSQLBoxUseSystemBackground());
 	chkCaretUseSystemBackgroundColour->SetValue(settings->GetCaretUseSystemBackground());
@@ -716,10 +720,12 @@ void frmOptions::OnOK(wxCommandEvent &ev)
 	settings->SetAutoRowCountThreshold(StrToLong(txtAutoRowCount->GetValue()));
 	settings->SetIndentSpaces(StrToLong(txtIndent->GetValue()));
 	settings->SetSpacesForTabs(chkSpacesForTabs->GetValue());
+	settings->SetCleanPasteSQL(chkCleanPasteSQL->GetValue());
 	settings->SetCopyQuoting(cbCopyQuote->GetCurrentSelection());
 	settings->SetCopyQuoteChar(cbCopyQuoteChar->GetValue());
 	settings->SetHistoryMaxQueries(StrToLong(txtHistoryMaxQueries->GetValue()));
 	settings->SetHistoryMaxQuerySize(StrToLong(txtHistoryMaxQuerySize->GetValue()));
+	settings->SetSaveQueryHistory(chkSaveQueryHistory->GetValue());
 	settings->SetWidthCaretForKeyboardLayout((int)StrToLong(txtWidthCaretKeyboardLayout->GetValue()));
 	
 	settings->SetRefreshOnClick(cbRefreshOnClick->GetSelection());

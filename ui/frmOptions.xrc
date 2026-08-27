@@ -512,6 +512,21 @@
                   <border>4</border>
                 </object>
                 <object class="sizeritem">
+                  <object class="wxStaticText" name="stCleanPasteSQL">
+                    <label>Clean SQL pasted from source code</label>
+                  </object>
+                  <flag>wxALIGN_CENTER_VERTICAL|wxTOP|wxLEFT|wxRIGHT</flag>
+                  <border>4</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxCheckBox" name="chkCleanPasteSQL">
+                    <label></label>
+                    <checked>1</checked>
+                  </object>
+                  <flag>wxEXPAND|wxTOP|wxLEFT|wxRIGHT</flag>
+                  <border>4</border>
+                </object>
+                <object class="sizeritem">
                   <object class="wxStaticText" name="stStickySql">
                     <label>Copy SQL from main window to query tool</label>
                   </object>
@@ -1218,6 +1233,21 @@
                   <vgap>5</vgap>
                   <hgap>5</hgap>
                   <growablecols>1</growablecols>
+                <object class="sizeritem">
+                  <object class="wxStaticText" name="stSaveQueryHistory">
+                    <label>Save query history</label>
+                  </object>
+                  <flag>wxALIGN_CENTER_VERTICAL|wxTOP|wxLEFT|wxRIGHT</flag>
+                  <border>4</border>
+                </object>
+                <object class="sizeritem">
+                  <object class="wxCheckBox" name="chkSaveQueryHistory">
+                    <label></label>
+                    <checked>1</checked>
+                  </object>
+                  <flag>wxEXPAND|wxTOP|wxLEFT|wxRIGHT</flag>
+                  <border>4</border>
+                </object>
                 <object class="sizeritem">
                   <object class="wxStaticText" name="stHistoryFile">
                     <label>History file path</label>

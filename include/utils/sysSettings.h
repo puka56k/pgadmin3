@@ -520,6 +520,26 @@ public:
 	{
 		Write(wxT("History/File"), newval);
 	}
+	bool GetSaveQueryHistory() const
+	{
+		bool b;
+		Read(wxT("History/Save"), &b, true);
+		return b;
+	}
+	void SetSaveQueryHistory(const bool newval)
+	{
+		WriteBool(wxT("History/Save"), newval);
+	}
+	bool GetCleanPasteSQL() const
+	{
+		bool b;
+		Read(wxT("Query/CleanPasteSQL"), &b, true);
+		return b;
+	}
+	void SetCleanPasteSQL(const bool newval)
+	{
+		WriteBool(wxT("Query/CleanPasteSQL"), newval);
+	}
 	long  GetHistoryMaxQueries() const
 	{
 		long l;

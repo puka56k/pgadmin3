@@ -29,6 +29,7 @@
 #include "utils/popuphelp.h"
 #include "utils/FormatterSQL.h"
 #include "utils/dlgTransformText.h"
+#include "utils/pastedSQL.h"
 #include "utils/TableColsMap.h"
 #include "utils/PreviewHtml.h"
 #include "ctl/SourceViewDialog.h"
@@ -827,6 +828,20 @@ nextchar:
 }
 void ctlSQLBox::OnKeyDown(wxKeyEvent &event)
 {
+	// Scintilla handles Ctrl-V itself, so it never reaches our Paste() - take
+	// the keystroke here instead and don't Skip() it, or the text gets pasted
+	// a second time.
+	if (!GetReadOnly() && settings->GetCleanPasteSQL() &&
+	        // wxMOD_CMD is Cmd on macOS and Ctrl everywhere else; wxMOD_CONTROL
+	        // would be the physical Control key on macOS, so Cmd-V - the actual
+	        // paste keystroke there - would bypass this hook.
+	        ((event.GetModifiers() == wxMOD_CMD && event.GetKeyCode() == 'V') ||
+	         (event.GetModifiers() == wxMOD_SHIFT && event.GetKeyCode() == WXK_INSERT)))
+	{
+		Paste();
+		return;
+	}
+
 	if (event.GetKeyCode() == WXK_ESCAPE && m_PopupHelp) { delete m_PopupHelp; m_PopupHelp = NULL; }
 	int pos = GetCurrentPos();
 	wxChar ch = GetCharAt(pos - 1);
@@ -2034,6 +2049,54 @@ void ctlSQLBox::Copy() {
 
 
    }
+
+// SQL is often copied out of program source code, where it is a concatenated
+// string literal. Paste the SQL rather than the source code, but only when the
+// clipboard really holds source code - see CleanPastedSQL().
+void ctlSQLBox::Paste()
+{
+	if (GetReadOnly() || !settings->GetCleanPasteSQL())
+	{
+		wxStyledTextCtrl::Paste();
+		return;
+	}
+
+	wxString text;
+	if (wxTheClipboard->Open())
+	{
+		if (wxTheClipboard->IsSupported(wxDF_TEXT))
+		{
+			wxTextDataObject textData;
+			wxTheClipboard->GetData(textData);
+			text = textData.GetText();
+		}
+		wxTheClipboard->Close();
+	}
+
+	int fragments = 0;
+	wxString sql = CleanPastedSQL(text, fragments);
+	if (fragments == 0)
+	{
+		wxStyledTextCtrl::Paste();
+		return;
+	}
+
+	BeginUndoAction();
+	ReplaceSelection(sql);
+	EndUndoAction();
+
+	ReportPasteCleaned(fragments);
+}
+
+void ctlSQLBox::ReportPasteCleaned(int fragments)
+{
+	wxFrame *frame = wxDynamicCast(wxGetTopLevelParent(this), wxFrame);
+	if (!frame || !frame->GetStatusBar() || frame->GetStatusBar()->GetFieldsCount() < 2)
+		return;
+
+	// field 1 is STATUSPOS_MSGS in the query tool
+	frame->SetStatusText(wxString::Format(_("Pasted SQL cleaned (%d fragments)"), fragments), 1);
+}
 
 extern "C" char *tab_complete(const char *allstr, const int startptr, const int endptr, void *dbptr);
 void ctlSQLBox::OnAutoComplete(wxCommandEvent &rev)
