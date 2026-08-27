@@ -409,6 +409,10 @@ void ExplainText::OnPaint(wxPaintEvent &ev)
 {
 	wxPaintDC dc(this);
 
+	// The window background is a hardcoded pale yellow, so the text colour has
+	// to be pinned as well - otherwise a dark theme supplies a light one.
+	dc.SetTextForeground(*wxBLACK);
+
 	wxFont stdFont = settings->GetSystemFont();
 	wxFont boldFont = stdFont;
 	boldFont.SetWeight(wxFONTWEIGHT_BOLD);

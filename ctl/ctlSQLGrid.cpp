@@ -92,8 +92,13 @@ ctlSQLGrid::ctlSQLGrid(wxWindow* parent, wxWindowID id, const wxPoint& pos, cons
     SetDefaultRenderer(new  CursorCellRenderer(thousandsWidthSeparator));
     //SetUseNativeColLabels(true);
     //UseNativeColHeader(true);
-    SetCellHighlightColour(wxColor(0, 0, 0));
-#ifdef __WXGTK__
+    SetCellHighlightColour(sysSettings::IsDarkAppearance()
+                           ? wxColor(0xE8, 0xE8, 0xE8) : wxColor(0, 0, 0));
+    // macOS hands back the same colour for the cell background, the grid lines
+    // and the label background under a dark appearance (all #171717), so the
+    // grid renders with no visible separators at all. The repair below was
+    // written for GTK but the collision is not GTK-specific.
+#if defined(__WXGTK__) || defined(__WXMAC__)
     wxColour selbg = GetSelectionBackground();
     wxColour cbg = GetBackgroundColour();
     wxColour labbg = GetLabelBackgroundColour();
@@ -123,6 +128,17 @@ ctlSQLGrid::ctlSQLGrid(wxWindow* parent, wxWindowID id, const wxPoint& pos, cons
 }
 #include "wx/renderer.h"
 #include "wx/headerctrl.h"
+wxColour ctlSQLGrid::RowHighlightOk()
+{
+    return sysSettings::IsDarkAppearance() ? wxColour(28, 58, 32)
+                                           : wxColour(224, 255, 224);
+}
+
+wxColour ctlSQLGrid::RowHighlightWarn()
+{
+    return sysSettings::IsDarkAppearance() ? wxColour(74, 68, 30)
+                                           : wxColour(248, 240, 130);
+}
 void ctlSQLGrid::OnGridSelectCell(wxGridEvent& evt) {
     int row = evt.GetRow();
     //int col = evt.GetCol();
@@ -1256,14 +1272,14 @@ int recurse(ctlSQLGrid* g, int pos, int row, double& transfer) {
                     leveltime = leveltime + lastnode;
                 }
                 if (isstd)
-                        g->grp->ColoriseRow(row, wxColour(224, 255, 224)); // green
+                        g->grp->ColoriseRow(row, ctlSQLGrid::RowHighlightOk());
                     else
-                        g->grp->ColoriseRow(row, wxColour(248, 240, 130)); // yellow
+                        g->grp->ColoriseRow(row, ctlSQLGrid::RowHighlightWarn());
 
             }
             else
             {
-                g->grp->ColoriseRow(row, wxColour(224, 255, 224)); // green
+                g->grp->ColoriseRow(row, ctlSQLGrid::RowHighlightOk());
                 // end section
                 if (g->grp->endsectionrow==-1 && p==0 && pos==0) {
                         wxRegEx foundstr(wxT("Planning Time: ([0-9.]+)"), wxRE_ADVANCED);
@@ -1386,7 +1402,12 @@ retry:
             else
             {
                 wxColor color;
-                color.Set(239, 228, 176);
+                // Marks a multi-line value; needs a dark counterpart or it
+                // collides with the light text colour of a dark theme.
+                if (sysSettings::IsDarkAppearance())
+                    color.Set(74, 68, 30);
+                else
+                    color.Set(239, 228, 176);
                 if ((sPos = text.Find(wxT('\n'))) != wxNOT_FOUND) {
                     dc.SetBrush(*wxTheBrushList->FindOrCreateBrush(color));
                     multiline = true;

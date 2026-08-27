@@ -114,7 +114,10 @@ wxColour ctlSQLBox::SetSQLBoxColourBackground(bool transaction) {
 	{
 		bgColor = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	}
-	if (transaction) bgColor = wxColour(241, 241, 186);
+	// Pale yellow marks an open transaction; it needs a dark counterpart, or the
+	// light syntax palette gets swapped in under a dark theme.
+	if (transaction)
+		bgColor = sysSettings::IsDarkAppearance() ? wxColour(74, 68, 30) : wxColour(241, 241, 186);
 	StyleSetBackground(wxSTC_STYLE_DEFAULT, bgColor);
 //	SetBackgroundStyle(wxBG_STYLE_CUSTOM);
 	return bgColor;

@@ -635,6 +635,16 @@ public:
 		Write(wxT("BlockedbyProcessColour"), newval);
 	}
 
+	// Returns true when the desktop uses a dark appearance. The editor's
+	// background, foreground, caret and margin defaults below all have dark
+	// variants: the historic palette assumes a white editor background, and
+	// the dark lexer colours in GetSQLColour() are unreadable on top of a
+	// white one.
+	static bool IsDarkAppearance()
+	{
+		return wxSystemSettings::GetAppearance().IsUsingDarkBackground();
+	}
+
 	// SQL Editor Colours options
 	bool GetSQLBoxUseSystemBackground() const
 	{
@@ -669,7 +679,7 @@ public:
 	wxString GetCaretColourBackground() const
 	{
 		wxString s;
-		Read(wxT("ctlSQLBox/CaretColourBackground"), &s, wxT("#ffffff"));
+		Read(wxT("ctlSQLBox/CaretColourBackground"), &s, IsDarkAppearance() ? wxT("#2d2d2d") : wxT("#ffffff"));
 		return s;
 	}
 	void SetCaretColourBackground(const wxString& newval)
@@ -680,7 +690,7 @@ public:
 	wxString GetSQLBoxColourBackground() const
 	{
 		wxString s;
-		Read(wxT("ctlSQLBox/ColourBackground"), &s, wxT("#ffffff"));
+		Read(wxT("ctlSQLBox/ColourBackground"), &s, IsDarkAppearance() ? wxT("#1e1e1e") : wxT("#ffffff"));
 		return s;
 	}
 	void SetSQLBoxColourBackground(const wxString &newval)
@@ -690,7 +700,7 @@ public:
 	wxString GetSQLBoxColourForeground() const
 	{
 		wxString s;
-		Read(wxT("ctlSQLBox/ColourForeground"), &s, wxT("#000000"));
+		Read(wxT("ctlSQLBox/ColourForeground"), &s, IsDarkAppearance() ? wxT("#e8e8e8") : wxT("#000000"));
 		return s;
 	}
 	void SetSQLBoxColourForeground(const wxString &newval)
@@ -701,7 +711,7 @@ public:
 	wxString GetSQLColourCaret() const
 	{
 		wxString s;
-		Read(wxT("ctlSQLBox/ColourCaret"), &s, wxT("#000000"));
+		Read(wxT("ctlSQLBox/ColourCaret"), &s, IsDarkAppearance() ? wxT("#e8e8e8") : wxT("#000000"));
 		return s;
 	}
 	void SetSQLColourCaret(const wxString &newval)
@@ -723,7 +733,7 @@ public:
 	wxString GetSQLMarginBackgroundColour() const
 	{
 		wxString s;
-		Read(wxT("ctlSQLBox/MarginBackgroundColour"), &s, wxT("#dddddd"));
+		Read(wxT("ctlSQLBox/MarginBackgroundColour"), &s, IsDarkAppearance() ? wxT("#333333") : wxT("#dddddd"));
 		return s;
 	}
 	void SetSQLMarginBackgroundColour(const wxString &newval)
@@ -1056,7 +1066,7 @@ private:
 			wxT("#4EC9C9"), wxT("#6699FF"), wxT("#D67AD6"), wxT("#D67AD6"),
 			wxT("#4EC9C9"), wxT("#a0a0a0"), wxT("#D4D4D4"), wxT("#D4D4D4")
 		};
-		if (wxSystemSettings::GetAppearance().IsUsingDarkBackground())
+		if (IsDarkAppearance())
 			return darkColors[index];
 		return lightColors[index];
 	}

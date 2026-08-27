@@ -47,6 +47,12 @@ public:
         isSort = flag;
     };
 
+    // Row/cell highlight colours. Defined out of line because they depend on
+    // the desktop appearance: the pale originals are unreadable behind the
+    // light text colour a dark theme gives the cells.
+    static wxColour RowHighlightOk();    // "fine" / already-executed rows
+    static wxColour RowHighlightWarn();  // "look here" / multi-line values
+
     wxString GetColumnName(int colNum);
     wxSize GetBestSize(int row, int col);
     void OnLabelDoubleClick(wxGridEvent& event);

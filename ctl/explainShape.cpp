@@ -168,7 +168,10 @@ void ExplainShape::OnDraw(wxDC &dc)
         wxMemoryDC dc2;
         dc2.SelectObject(bmpm);
         //dc2.SetBackgroundMode(wxBRUSHSTYLE_SOLID);
-        dc2.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)));
+        // Fill has to track the canvas this bitmap is drawn onto, not the OS
+        // theme: the canvas is always light, so a dark wxSYS_COLOUR_WINDOW put
+        // dark fill and dark text on a white canvas.
+        dc2.SetBrush(wxBrush(GetCanvas()->GetBackgroundColour()));
         dc2.Clear();
         int w = bmpm.GetWidth();
         int h = bmpm.GetHeight();
@@ -185,7 +188,7 @@ void ExplainShape::OnDraw(wxDC &dc)
         mem = f.GetNativeFontInfoDesc();
         dc2.SetFont(f);
         dc2.SetPen(p);
-        //dc2.SetTextForeground(*wxBLACK);
+        dc2.SetTextForeground(*wxBLACK);
         //dc2.SetTextBackground(*wxWHITE);
         dc2.GetTextExtent(txt, &tw, &th);
         int border = 2;
