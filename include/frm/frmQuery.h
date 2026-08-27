@@ -128,10 +128,40 @@ private:
 	wxString outputPaneInfo;
 	ctlSQLResult *sqlResult;
 	wxArrayString body_template,title_template; // @gen:title menu:body generator @column_name@ end
-#define MAX_RESULT_COUNT 10
-	ctlSQLResult *ctlSQL[MAX_RESULT_COUNT];
-	ctlSQLBox    *ctlSBox[MAX_RESULT_COUNT];
+
+	// Per-SQL-tab output state, so that switching SQL tabs switches the whole
+	// output pane with it instead of leaving whatever ran last on screen.
+	//
+	// Slot 0 is a permanent placeholder that no tab ever owns: grids are
+	// allocated lazily on a tab's first execution, and slot 0's empty grid is
+	// what a tab that has not run anything yet displays. Slots from 1 up are
+	// keyed by `box`.
+	//
+	// The Messages text and the EXPLAIN output are held as strings rather than
+	// as one widget per tab: msgResult is a plain accumulating wxTextCtrl and
+	// explainCanvas is rebuilt from a single SetExplainString() call, so a
+	// string per tab is all the state either of them actually has.
+	struct SqlTabOutput
+	{
+		ctlSQLBox    *box;         // owning editor; NULL = unowned slot
+		ctlSQLResult *grid;        // its Data Output grid
+		wxString      msgText;     // its Messages pane contents
+		wxString      explainText; // its last EXPLAIN output, empty if none
+	};
+	std::vector<SqlTabOutput> tabOut;
 	int indexResult;
+
+	int  TabOutFind(ctlSQLBox *box);        // -1 when the tab owns no slot yet
+	int  TabOutEnsure(ctlSQLBox *box);      // find, else allocate grid + page
+	void TabOutSaveVisible();               // capture msg/explain into indexResult
+	void TabOutShow(int idx);               // make idx the visible output state
+	void TabOutRelease(ctlSQLBox *box);     // tab closed: drop grid, free slot
+	int  TabOutExecTarget();                // slot the running query writes to
+	void MsgAppend(const wxString &str);    // Messages text, routed per tab
+	void MsgClear();
+	void ExplainSet(const wxString &str);   // EXPLAIN output, routed per tab
+	void SetTabResultMarker(ctlSQLBox *box);
+	void ClearTabResultMarker(ctlSQLBox *box);
 	ExplainCanvas *explainCanvas;
 	wxTextCtrl *msgResult, *msgHistory;
 	wxBitmapComboBox *cbConnection;

@@ -713,10 +713,10 @@ frmQuery::frmQuery(frmMain *form, const wxString &_title, pgConn *_conn, const w
 	outputPane = new ctlAuiNotebook(this, CTL_NTBKGQB, wxDefaultPosition, wxSize(500, 300), wxAUI_NB_TOP | wxAUI_NB_TAB_SPLIT | wxAUI_NB_TAB_MOVE | wxAUI_NB_SCROLL_BUTTONS | wxAUI_NB_WINDOWLIST_BUTTON);
 	sqlResult = new ctlSQLResult(outputPane, conn, CTL_SQLRESULT, wxDefaultPosition, wxDefaultSize);
 
-	int len = sizeof(ctlSQL) / sizeof(ctlSQL[0]);
-	for (int i=0;i<len;i++) ctlSQL[i]=NULL;
-	for (int i=0;i<len;i++) ctlSBox[i]=NULL;
-	ctlSQL[0] = sqlResult;
+	// Slot 0: the placeholder grid every tab shows until it runs something.
+	// box stays NULL forever so TabOutEnsure() can never hand it to a tab.
+	tabOut.clear();
+	tabOut.push_back(SqlTabOutput{ NULL, sqlResult, wxEmptyString, wxEmptyString });
 	indexResult=0;
 	explainCanvas = new ExplainCanvas(outputPane);
 	msgResult = new wxTextCtrl(outputPane, CTL_MSGRESULT, wxT(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_DONTWRAP);
@@ -1440,8 +1440,7 @@ void frmQuery::OnChangeConnection(wxCommandEvent &ev)
 	{
 		conn = (pgConn *)cbConnection->GetClientData(sel);
 		SqlBookSetDatabase(conn);
-	int len = sizeof(ctlSQL) / sizeof(ctlSQL[0]);
-	for (int i=0;i<len;i++) if (ctlSQL[i]!=NULL) ctlSQL[i]->SetConnection(conn);
+	for (size_t i=0;i<tabOut.size();i++) if (tabOut[i].grid!=NULL) tabOut[i].grid->SetConnection(conn);
 		//sqlResult->SetConnection(conn);
 		pgScript->SetConnection(conn);
 		title = wxT("") + cbConnection->GetValue();
@@ -1575,12 +1574,11 @@ void frmQuery::OnChangeNotebookOutpane(wxAuiNotebookEvent &event)
 		if (wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult))
 		{
 			ctlSQLResult *c=wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult);
-			int len = sizeof(ctlSQL) / sizeof(ctlSQL[0]);
-			for (int i=0;i<len;i++)
-				if (ctlSQL[i]!=NULL && c==ctlSQL[i])
+			for (size_t i=0;i<tabOut.size();i++)
+				if (tabOut[i].grid!=NULL && c==tabOut[i].grid)
 				{
-					sqlResult=ctlSQL[i];
-					indexResult=i;
+					sqlResult=tabOut[i].grid;
+					indexResult=(int)i;
 					break;
 				}
 		}
@@ -1775,6 +1773,8 @@ void frmQuery::OnClear(wxCommandEvent &ev)
 	{
 		msgResult->Clear();
 		msgResult->SetFont(settings->GetSQLFont());
+		if (indexResult >= 0 && indexResult < (int)tabOut.size())
+			tabOut[indexResult].msgText = wxEmptyString;
 	}
 	else if (wnd == msgHistory)
 	{
@@ -2161,8 +2161,7 @@ void frmQuery::OnClose(wxCloseEvent &event)
 	manager.Update();
 
 	Hide();
-	int len = sizeof(ctlSQL) / sizeof(ctlSQL[0]);
-	for (int i=0;i<len;i++) if (ctlSQL[i]!=NULL) ctlSQL[i]->Disconnect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
+	for (size_t i=0;i<tabOut.size();i++) if (tabOut[i].grid!=NULL) tabOut[i].grid->Disconnect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
 
 //	sqlResult->Disconnect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
 	msgResult->Disconnect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
@@ -2175,7 +2174,7 @@ void frmQuery::OnClose(wxCloseEvent &event)
 	settings->SetExplainBuffers(queryMenu->IsChecked(MNU_BUFFERS));
 	settings->SetExplainTiming(queryMenu->IsChecked(MNU_TIMING));
 
-	for (int i=0;i<len;i++) if (ctlSQL[i]!=NULL) ctlSQL[i]->Abort();
+	for (size_t i=0;i<tabOut.size();i++) if (tabOut[i].grid!=NULL) tabOut[i].grid->Abort();
 
 //	sqlResult->Abort();                           // to make sure conn is unused
 
@@ -3040,19 +3039,16 @@ void frmQuery::OnExecuteShift(wxCommandEvent &event)
 {
 	//add new page outpane
 	if (!queryMenu->IsEnabled(MNU_EXECUTE_2)) return;
-	int len = sizeof(ctlSQL) / sizeof(ctlSQL[0]);
-	wxString titlename;
-	for (int i=0;i<len;i++) if (ctlSQL[i]==NULL) {
-
-		sqlResult = new ctlSQLResult(outputPane, conn, CTL_SQLRESULT, wxDefaultPosition, wxDefaultSize);
-		titlename=wxString::Format(_("Out %i"), i);
-		outputPane->AddPage(sqlResult, titlename);
-		sqlResult->Connect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
-		indexResult=i;
-		ctlSQL[i]=sqlResult;
-		ctlSBox[i]=sqlQuery;
-		break;
-	};
+	// "Execute new output" is the other axis: one tab, several result sets kept
+	// side by side. It still gets a page of its own in the output pane, which is
+	// what distinguishes it from a plain Execute now that every tab has a grid.
+	tabOut.push_back(SqlTabOutput{ sqlQuery, NULL, wxEmptyString, wxEmptyString });
+	int slot = (int)tabOut.size() - 1;
+	sqlResult = new ctlSQLResult(outputPane, conn, CTL_SQLRESULT, wxDefaultPosition, wxDefaultSize);
+	outputPane->AddPage(sqlResult, wxString::Format(_("Out %i"), slot));
+	sqlResult->Connect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
+	tabOut[slot].grid = sqlResult;
+	indexResult = slot;
 	OnExecute(event);
 }
 void frmQuery::OnExecute(wxCommandEvent &event)
@@ -3185,9 +3181,8 @@ void frmQuery::OnExecScript(wxCommandEvent &event)
 	queryMenu->Enable(MNU_CLEARHISTORY, true);
 
 	// Window stuff
-	explainCanvas->Clear();
-	msgResult->Clear();
-	msgResult->SetFont(settings->GetSQLFont());
+	ExplainSet(wxEmptyString);
+	MsgClear();
 	outputPane->SetSelection(2);
 
 	// Status text
@@ -3309,7 +3304,7 @@ void frmQuery::setTools(const bool running)
 
 void frmQuery::showMessage(const wxString &msg, const wxString &msgShort)
 {
-	msgResult->AppendText(msg + wxT("\n"));
+	MsgAppend(msg + wxT("\n"));
 	msgHistory->AppendText(msg + wxT("\n"));
 	wxString str;
 	if (msgShort.IsNull())
@@ -3330,7 +3325,7 @@ void frmQuery::execQuery(const wxString &query, int resultToRetrieve, bool singl
 	queryMenu->Enable(MNU_SAVEHISTORY, true);
 	queryMenu->Enable(MNU_CLEARHISTORY, true);
 
-	explainCanvas->Clear();
+	ExplainSet(wxEmptyString);
 
 	// Clear markers and indicators
 	sqlQuery->MarkerDeleteAll(0);
@@ -3343,9 +3338,13 @@ void frmQuery::execQuery(const wxString &query, int resultToRetrieve, bool singl
 	aborted = false;
 	isfilterresult=false;
 
-	sqlResult=ctlSQL[indexResult];
+	// Give the executing tab its own grid the first time it runs anything, and
+	// put that grid on screen. Every tab used to share slot 0, which is why the
+	// output pane kept showing whichever tab ran last.
+	int execSlot = TabOutEnsure(sqlQuery);
+	TabOutShow(execSlot);
+	sqlResult=tabOut[execSlot].grid;
 	sqlResult->ClearFilter();
-	ctlSBox[indexResult]=sqlQuery;
 
 	QueryExecInfo *qi = new QueryExecInfo();
 	qi->queryOffset = queryOffset;
@@ -3384,8 +3383,7 @@ void frmQuery::execQuery(const wxString &query, int resultToRetrieve, bool singl
 	SetStatusText(wxT(""), STATUSPOS_SECS);
 	SetStatusText(_("Query is running."), STATUSPOS_MSGS);
 	SetStatusText(wxT(""), STATUSPOS_ROWS);
-	msgResult->Clear();
-	msgResult->SetFont(settings->GetSQLFont());
+	MsgClear();
 	wxDateTime curr=wxDateTime::Now();
 	wxString str_curr=curr.FormatISOCombined(' ');
 	msgHistory->AppendText(wxString::Format(_("-- Executing query [%s]:[%s]\n"), sqlQueryExec->GetTitle(false).c_str(),str_curr.c_str()));
@@ -3623,7 +3621,7 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 	//
 	//}
 
-	msgResult->AppendText(str);
+	MsgAppend(str);
 	msgHistory->AppendText(str);
 
 	elapsedQuery = wxGetLocalTimeMillis() - startTimeQuery;
@@ -3631,7 +3629,8 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 
 	if (sqlResult->RunStatus() != PGRES_TUPLES_OK)
 	{
-		outputPane->SetSelection(2);
+		if (TabOutExecTarget() == indexResult)
+			outputPane->SetSelection(2);
 		if (sqlResult->RunStatus() == PGRES_COMMAND_OK)
 		{
 			done = true;
@@ -3764,10 +3763,16 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 	else
 	{
 		done = true;
-		for(int i=0;i<outputPane->GetPageCount();i++)
+		// Was an unconditional jump to the page holding the results. With one grid
+		// per SQL tab that would drag the user off whatever tab they moved on to,
+		// so the completing tab gets a marker instead (see completeQuery).
+		if (TabOutExecTarget() == indexResult)
 		{
-			if (wxDynamicCast(outputPane->GetPage(i), ctlSQLResult)==sqlResult) {
-				outputPane->SetSelection(i);
+			for(int i=0;i<outputPane->GetPageCount();i++)
+			{
+				if (wxDynamicCast(outputPane->GetPage(i), ctlSQLResult)==sqlResult) {
+					outputPane->SetSelection(i);
+				}
 			}
 		}
 
@@ -3827,7 +3832,7 @@ void frmQuery::OnQueryComplete(pgQueryResultEvent &ev)
 				          _("Total query runtime: %s\n"),
 				          ElapsedTimeToStr(elapsedQuery).c_str()
 				      );
-				msgResult->AppendText(str);
+				MsgAppend(str);
 				msgHistory->AppendText(str);
 
 				showMessage(
@@ -3967,7 +3972,7 @@ void frmQuery::writeScriptOutput()
 
 	wxString output(pgsOutputString);
 	pgsOutputString.Clear();
-	msgResult->AppendText(output);
+	MsgAppend(output);
 
 	pgScript->UnlockOutput();
 }
@@ -3989,7 +3994,7 @@ void frmQuery::completeQuery(bool done, bool explain, bool verbose)
 		else
 			notifyStr.Printf(_("\nAsynchronous notification of '%s' received from backend pid %d\n   Data: %s"), notify->name.c_str(), notify->pid, notify->data.c_str());
 
-		msgResult->AppendText(notifyStr);
+		MsgAppend(notifyStr);
 		msgHistory->AppendText(notifyStr);
 
 		notify = conn->GetNotification();
@@ -4006,8 +4011,8 @@ void frmQuery::completeQuery(bool done, bool explain, bool verbose)
 		                  statusMsg.c_str(), notifies), STATUSPOS_MSGS);
 	}
 
-	msgResult->AppendText(wxT("\n"));
-	msgResult->ShowPosition(0);
+	MsgAppend(wxT("\n"));
+	if (TabOutExecTarget() == indexResult) msgResult->ShowPosition(0);
 	msgHistory->AppendText(wxT("\n"));
 	msgHistory->ShowPosition(0);
 
@@ -4049,8 +4054,11 @@ void frmQuery::completeQuery(bool done, bool explain, bool verbose)
 					str.Append(sqlResult->OnGetItemText(i, 0));
 				}
 			}
-			explainCanvas->SetExplainString(str);
-			outputPane->SetSelection(1);
+			ExplainSet(str);
+			// Only pull the user over to the Explain tab if they are still looking
+			// at the tab that ran the query.
+			if (TabOutExecTarget() == indexResult)
+				outputPane->SetSelection(1);
 		}
 		updateMenu();
 	}
@@ -4058,8 +4066,12 @@ void frmQuery::completeQuery(bool done, bool explain, bool verbose)
 	// Change the output pane caption so the user knows which tab the result came from
 	sqlQueryExecLast = sqlQueryExec;
 	SetOutputPaneCaption(true);
-	for (int i=0;i<sqlQueryBook->GetPageCount();i++)
-		if ((sqlQueryBook->GetPageBitmap(i)).IsOk()) sqlQueryBook->SetPageBitmap(i,wxNullBitmap);
+	// Used to blank every tab's marker. Now the running marker is cleared, and if
+	// the user has moved to another tab meanwhile, the tab that just finished
+	// keeps a marker saying there are results waiting there.
+	ClearTabResultMarker(sqlQueryExec);
+	if (sqlQueryExec != NULL && sqlQueryExec != sqlQuery)
+		SetTabResultMarker(sqlQueryExec);
  	//int i=sqlQueryBook->GetPageCount()-1;
 	//sqlQueryBook->SetPageBitmap(i,CreateBitmap(wxNullColour));
 
@@ -4087,7 +4099,7 @@ void frmQuery::OnTimer(wxTimerEvent &event)
 	//	msgResult->AppendText(str + wxT("\n"));
 	//
 		msgHistory->AppendText(str + wxT("\n"));
-		msgResult->AppendText(str + wxT("\n"));
+		MsgAppend(str + wxT("\n"));
 	}
 
 	// Increase the granularity for longer running queries
@@ -4519,6 +4531,192 @@ void frmQuery::CheckModificationFile() {
 
 	}
 }
+// ---------------------------------------------------------------------------
+// Per-SQL-tab output state. See the SqlTabOutput comment in frmQuery.h.
+// ---------------------------------------------------------------------------
+
+int frmQuery::TabOutFind(ctlSQLBox *box)
+{
+	if (box == NULL) return -1;
+	for (size_t i = 1; i < tabOut.size(); i++)
+		if (tabOut[i].box == box) return (int)i;
+	return -1;
+}
+
+// Lazily give `box` its own Data Output grid. Reuses a slot freed by a closed
+// tab before growing the vector, so long sessions do not accumulate slots.
+int frmQuery::TabOutEnsure(ctlSQLBox *box)
+{
+	if (box == NULL) return 0;
+
+	int idx = TabOutFind(box);
+	if (idx >= 0) return idx;
+
+	int slot = -1;
+	for (size_t i = 1; i < tabOut.size(); i++)
+		if (tabOut[i].box == NULL && tabOut[i].grid == NULL) { slot = (int)i; break; }
+	if (slot < 0)
+	{
+		tabOut.push_back(SqlTabOutput{ NULL, NULL, wxEmptyString, wxEmptyString });
+		slot = (int)tabOut.size() - 1;
+	}
+
+	ctlSQLResult *grid = new ctlSQLResult(outputPane, conn, CTL_SQLRESULT, wxDefaultPosition, wxDefaultSize);
+	grid->Connect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
+	grid->Hide();
+
+	tabOut[slot].box = box;
+	tabOut[slot].grid = grid;
+	tabOut[slot].msgText = wxEmptyString;
+	tabOut[slot].explainText = wxEmptyString;
+	return slot;
+}
+
+// Messages and EXPLAIN live in one widget each, so the currently shown slot has
+// to hand its contents back before another slot takes the screen.
+void frmQuery::TabOutSaveVisible()
+{
+	if (indexResult < 0 || indexResult >= (int)tabOut.size()) return;
+	tabOut[indexResult].msgText = msgResult->GetValue();
+}
+
+// Make `idx` the state on screen: swap its grid into the Data Output page and
+// restore its Messages and EXPLAIN. RemovePage() detaches without destroying,
+// so the grids of other tabs stay alive with their results intact.
+void frmQuery::TabOutShow(int idx)
+{
+	if (idx < 0 || idx >= (int)tabOut.size()) return;
+	if (idx == indexResult) return;
+
+	TabOutSaveVisible();
+
+	ctlSQLResult *incoming = tabOut[idx].grid;
+	if (incoming == NULL) incoming = tabOut[0].grid;   // never executed yet
+
+	ctlSQLResult *outgoing = sqlResult;
+	if (incoming != outgoing)
+	{
+		int at = outputPane->GetPageIndex(outgoing);
+		if (at != wxNOT_FOUND)
+		{
+			bool wasSelected = ((int)outputPane->GetSelection() == at);
+			wxString caption = outputPane->GetPageText(at);
+			outputPane->RemovePage(at);
+			outgoing->Hide();
+			incoming->Show();
+			outputPane->InsertPage(at, incoming, caption, wasSelected);
+		}
+	}
+
+	sqlResult = incoming;
+	indexResult = (tabOut[idx].grid != NULL) ? idx : 0;
+
+	msgResult->Clear();
+	msgResult->SetFont(settings->GetSQLFont());
+	msgResult->AppendText(tabOut[idx].msgText);
+	msgResult->ShowPosition(0);
+
+	explainCanvas->Clear();
+	if (!tabOut[idx].explainText.IsEmpty())
+		explainCanvas->SetExplainString(tabOut[idx].explainText);
+}
+
+// A closed tab's results go with it - this is also where the slot returns to
+// the pool, which the original fixed-array code never did.
+void frmQuery::TabOutRelease(ctlSQLBox *box)
+{
+	int idx = TabOutFind(box);
+	if (idx <= 0) return;
+
+	ctlSQLResult *grid = tabOut[idx].grid;
+	if (grid != NULL)
+	{
+		if (sqlResult == grid)
+		{
+			// Fall back to the placeholder before the grid goes away.
+			indexResult = -1;
+			TabOutShow(0);
+		}
+		int at = outputPane->GetPageIndex(grid);
+		if (at != wxNOT_FOUND)
+			outputPane->RemovePage(at);
+		grid->Abort();
+		grid->Destroy();
+	}
+
+	tabOut[idx].box = NULL;
+	tabOut[idx].grid = NULL;
+	tabOut[idx].msgText = wxEmptyString;
+	tabOut[idx].explainText = wxEmptyString;
+}
+
+// Output from a running query belongs to the tab that launched it, not to
+// whichever tab happens to be on screen when it finishes.
+int frmQuery::TabOutExecTarget()
+{
+	ctlSQLBox *owner = (sqlQueryExec != NULL) ? sqlQueryExec : sqlQuery;
+	int idx = TabOutFind(owner);
+	return (idx >= 0) ? idx : indexResult;
+}
+
+void frmQuery::MsgAppend(const wxString &str)
+{
+	int idx = TabOutExecTarget();
+	if (idx == indexResult)
+	{
+		msgResult->AppendText(str);
+		return;
+	}
+	if (idx >= 0 && idx < (int)tabOut.size())
+		tabOut[idx].msgText += str;
+}
+
+void frmQuery::MsgClear()
+{
+	int idx = TabOutExecTarget();
+	if (idx == indexResult)
+	{
+		msgResult->Clear();
+		msgResult->SetFont(settings->GetSQLFont());
+		return;
+	}
+	if (idx >= 0 && idx < (int)tabOut.size())
+		tabOut[idx].msgText = wxEmptyString;
+}
+
+// EXPLAIN has a single population point, so a string per tab is the whole of
+// its state; the canvas is rebuilt from it when the tab comes back on screen.
+void frmQuery::ExplainSet(const wxString &str)
+{
+	int idx = TabOutExecTarget();
+	if (idx >= 0 && idx < (int)tabOut.size())
+		tabOut[idx].explainText = str;
+
+	if (idx != indexResult) return;   // not the tab on screen
+
+	explainCanvas->Clear();
+	if (!str.IsEmpty())
+		explainCanvas->SetExplainString(str);
+}
+
+// Instead of yanking the output pane over when a query finishes on a tab the
+// user has already left, flag that tab so they can come back to it.
+void frmQuery::SetTabResultMarker(ctlSQLBox *box)
+{
+	if (box == NULL) return;
+	int page = sqlQueryBook->GetPageIndex(box);
+	if (page >= 0)
+		sqlQueryBook->SetPageBitmap(page, CreateBitmap(wxColour(0, 160, 0)));
+}
+
+void frmQuery::ClearTabResultMarker(ctlSQLBox *box)
+{
+	if (box == NULL) return;
+	int page = sqlQueryBook->GetPageIndex(box);
+	if (page >= 0 && sqlQueryBook->GetPageBitmap(page).IsOk())
+		sqlQueryBook->SetPageBitmap(page, wxNullBitmap);
+}
+
 void frmQuery::OnSqlBookPageChanged(wxAuiNotebookEvent &event)
 {
 	// Try to always keep sqlQuery variable pointing to the currently selected SQLBox.
@@ -4532,28 +4730,24 @@ void frmQuery::OnSqlBookPageChanged(wxAuiNotebookEvent &event)
 			// Update UI with chosen query's info
 			SetEOLModeDisplay(sqlQuery->GetEOLMode());
 			setExtendedTitle();
-			curpage = outputPane->GetSelection();
-			ctlSQLResult *r;
-			r=NULL;
-			if (wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult)) {
-				ctlSQLResult *r = wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult);
-			}
-			int pos=-1;
-			//if (r!=NULL) for (int i=0;i<MAX_RESULT_COUNT;i++) if (ctlSQL[i]==r && ctlSBox[i]==sqlQuery) pos=i;
-			if (pos==-1) {
-				for (int i=0;i<MAX_RESULT_COUNT;i++)
-				{
-					if (ctlSQL[i]==NULL) continue;
-					int idx=outputPane->GetPageIndex(ctlSQL[i]);
+			// Swap the whole output pane over to this tab. This used to find the
+			// matching slot and then only tint tab icons with it, leaving the
+			// previous tab's results on screen - the reported bug.
+			int pos = TabOutFind(sqlQuery);
+			TabOutShow(pos >= 0 ? pos : 0);
 
-					if (ctlSBox[i]==sqlQuery) {
-						outputPane->SetPageBitmap(idx,CreateBitmap(wxNullColour));
-						pos=i;
-					} else
-					{
-						outputPane->SetPageBitmap(idx,wxNullBitmap);
-					}
-				}
+			// This tab has been looked at, so drop its "new results" marker.
+			ClearTabResultMarker(sqlQuery);
+
+			// Mark the extra "Out N" pages that belong to other tabs.
+			for (size_t i = 1; i < tabOut.size(); i++)
+			{
+				if (tabOut[i].grid == NULL) continue;
+				int idx = outputPane->GetPageIndex(tabOut[i].grid);
+				if (idx == wxNOT_FOUND) continue;
+				outputPane->SetPageBitmap(idx,
+				        tabOut[i].box == sqlQuery ? CreateBitmap(wxNullColour)
+				                                  : wxNullBitmap);
 			}
 
 			sqlQuery->SetFocus();
@@ -4581,6 +4775,11 @@ void frmQuery::OnSqlBookPageChanging(wxAuiNotebookEvent& event)
 		event.Veto();
 		wxMessageBox(_("Cannot change to selected SQL tab now. Try again a bit later."));
 	}
+	// Capture what is on screen while sqlQuery still points at the outgoing tab;
+	// OnSqlBookPageChanged runs after the switch, when it is too late to tell
+	// whose Messages text this was.
+	TabOutSaveVisible();
+
 	if (sqlQueryBook->GetPageCount() > 1)
 	{
 		int curpage = sqlQueryBook->GetSelection();
@@ -4606,7 +4805,18 @@ void frmQuery::OnSqlBookAddPage(wxCommandEvent &event)
 }
 void frmQuery::OnSqlBookPageClosed(wxAuiNotebookEvent &event)
 {
-	//OnSqlBookPageChanged(event);
+	// Closing a tab has to hand its grid and its slot back. This function was
+	// empty, so both leaked: the output page stayed behind and the slot could
+	// never be reused. SqlBookDisconnectPage() covers the paths that run before
+	// the page is gone; TabOutRelease() is idempotent, so calling it again for
+	// any tab that is no longer in the book is safe.
+	for (size_t i = 1; i < tabOut.size(); i++)
+	{
+		ctlSQLBox *box = tabOut[i].box;
+		if (box == NULL) continue;
+		if (sqlQueryBook->GetPageIndex(box) == wxNOT_FOUND)
+			TabOutRelease(box);
+	}
 
 	//wxSleep(5);
 //	wxMessageBox(wxT("OnSqlBookPageClosed end"));
@@ -4640,12 +4850,10 @@ void frmQuery::OnNotebookOutpaneTabRDown(wxAuiNotebookEvent &event) {
 		if (wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult))
 		{
 			ctlSQLResult* c = wxDynamicCast(outputPane->GetPage(curpage), ctlSQLResult);
-			int len = MAX_RESULT_COUNT;
-			for (int i = 0; i < len; i++)
-				if (ctlSQL[i] != NULL && c == ctlSQL[i])
+			for (size_t i = 0; i < tabOut.size(); i++)
+				if (tabOut[i].grid != NULL && c == tabOut[i].grid)
 				{
-					ctlSQLResult *sqlRes = ctlSQL[i];
-					ctlSQLBox *box= ctlSBox[i];
+					ctlSQLBox *box= tabOut[i].box;
 					int querypage= sqlQueryBook->GetPageIndex(box);
 					if (querypage >= 0) {
 						sqlQueryBook->SetSelection(querypage);
@@ -4794,7 +5002,9 @@ void frmQuery::SqlBookDisconnectPage(ctlSQLBox *box)
 	{
 		box->Disconnect(wxID_ANY, wxEVT_SET_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
 		box->Disconnect(wxID_ANY, wxEVT_KILL_FOCUS, wxFocusEventHandler(frmQuery::OnFocus));
-		for (int k=0;k<MAX_RESULT_COUNT;k++) if (ctlSBox[k]==box) ctlSBox[k]=NULL;
+		// Used to null only the box pointer, leaving the grid and its output page
+		// behind forever - the slot could then never be reused.
+		TabOutRelease(box);
 
 	}
 }
