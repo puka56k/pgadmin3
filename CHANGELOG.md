@@ -5,6 +5,74 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Restored the upstream `F5` = Execute keybinding. This fork shipped `F5` as
+  "Execute to file" and `F8` as "Execute", which is backwards from upstream
+  pgAdmin III, pgAdmin 4 and every other SQL client. Now `F5` Execute,
+  `Shift+F5` Execute new output, `F6` pgScript, `F7` Explain, `F8` Execute to
+  file. Only the built-in defaults changed — `keymap.txt` in the user's data
+  dir still overrides them, so the old layout can be restored without a
+  rebuild.
+- New "clean pasted SQL" option (on by default). SQL copied out of program
+  source code arrives as a concatenated string literal; `utils/pastedSQL.cpp`
+  unwraps it back into plain SQL, joining the fragments, decoding escape
+  sequences and dropping the surrounding syntax. Text that does not look like
+  source code is returned untouched, so plain SQL and quoted identifiers
+  (`"MyTable"`) paste normally. The paste keystroke is hooked in `ctlSQLBox`
+  because Scintilla handles it internally and it never reaches `Paste()`; the
+  hook tests `wxMOD_CMD` rather than `wxMOD_CONTROL`, since on macOS
+  `wxMOD_CONTROL` is the physical Control key and paste is Cmd-V. Covered by
+  `tests/test_CleanPastedSQL.cpp`.
+- New "save query history" option (on by default). When off, the history box
+  is hidden, completions are not recorded, and `LoadQueries()`/`SaveQueries()`
+  return early.
+- Dark-appearance defaults for the SQL editor itself. `GetSQLColour()` already
+  had a dark lexer palette, but the editor's own background, foreground,
+  caret, caret background and margin background were unconditionally
+  `#ffffff`/`#000000`/`#dddddd` — so under a dark desktop the dark lexer
+  colours were drawn onto a white editor. Added
+  `sysSettings::IsDarkAppearance()` as the single place that asks the
+  question and reused it where the same query was already inlined. As before,
+  only unset defaults are affected; a colour the user has explicitly chosen is
+  left alone.
+- Dark-appearance handling for the result grid and the explain view:
+  `ctlSQLGrid::RowHighlightOk()`/`RowHighlightWarn()` replace the pale green
+  and yellow literals used for explain rows, result rows and the date-column
+  warning, the multi-line-value marker gets a dark counterpart, and the cell
+  highlight is no longer hardcoded black. `explainCanvas`/`explainShape` pin
+  their text foreground to black instead of inheriting it, because both draw
+  onto a surface that stays light regardless of the system appearance;
+  `explainShape`'s fill now tracks the canvas colour rather than
+  `wxSYS_COLOUR_WINDOW`.
+
+### Fixed
+- macOS: `settings.ini` was never copied into the `.app`, so
+  `LocatePath(SETTINGS_INI, true)` found nothing and the app used hard-coded
+  defaults only for anything the user had not overridden. It now ships in
+  `Contents/SharedSupport` alongside `i18n/` and `docs/` — verified at runtime,
+  where the debug log's "Settings INI" line went from empty to the in-bundle
+  path.
+- macOS: the result grid drew with no visible separators under a dark
+  appearance. macOS returns the same colour (`#171717`) for the cell
+  background, the grid lines and the label background, and the existing repair
+  for that collision in `ctlSQLGrid.cpp` was guarded by `__WXGTK__` only. The
+  guard now covers `__WXMAC__` too rather than duplicating the code.
+- Windows: the post-build debug-symbol split passed the bare target name to
+  `objcopy` instead of `$<TARGET_FILE:pgAdmin3>`. The bare name has no `.exe`
+  suffix, so the step silently operated on a nonexistent path.
+- Windows: link `ws2_32` on `WIN32` — a native MinGW build needs winsock for
+  `WSAStartup()`/`gethostname()`.
+- Windows: `pgAdmin3.rc` passed a third argument to every VERSIONINFO `VALUE`
+  (`VALUE "FileVersion", VERSION_STR, "\0"`). MSVC's `rc.exe` accepts it,
+  `windres` does not, and the `"\0"` is redundant since VERSIONINFO strings
+  are null-terminated anyway.
+
+### Changed
+- A native (non-cross) Windows build now compiles `pgAdmin3.rc` via a new
+  `elseif(WIN32)` branch, so it also gets the app icon, version info and the
+  per-monitor DPI-aware v2 manifest — previously only the cross-compile path
+  did.
+
 ## [2026.08.16]
 
 ### Added

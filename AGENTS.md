@@ -544,3 +544,50 @@ picks up this work next — treat this as a running log, not final docs.
   objcopy-based split — cosmetic, not blocking.
 
 <!-- Append new dated entries below as work progresses. -->
+
+- 2026-08-27: Rebased a separate line of work onto this fork. That work had
+  been done independently on top of `levinsv/pgadmin3` (a Windows-first branch
+  plus a from-scratch macOS bundle attempt) before discovering this fork
+  already had the macOS port. Everything bundle-related from that attempt was
+  thrown away in favour of `macos/build_app.sh`; only the genuinely
+  independent pieces were carried over. Notes worth keeping:
+  - **`GetDataDir()` → `SharedSupport` is not wx-3.3-specific.** The
+    2026-07-14 entry above attributes it to wx 3.3.3's `stdpaths.mm`. Measured
+    it directly under **wx 3.2.11** (a shared `--with-osx_cocoa` build at
+    `~/opt/wx32`), both as a bare binary and inside a real `.app`:
+    `GetDataDir()` returns `Contents/SharedSupport` and `GetResourcesDir()`
+    returns `Contents/Resources` in both. So `build_app.sh`'s choice of
+    `SHAREDSUPPORT_DIR` is correct across both wx versions, and the
+    Resources-vs-SharedSupport trap will catch anyone who reasons about it
+    from the CMake `MACOSX_BUNDLE` side (where `Resources` is the obvious
+    destination) instead of measuring.
+  - **`settings.ini` was missing from the bundle.** `LocatePath(SETTINGS_INI,
+    true)` searches the same `dataDir` as `i18n`, so it belongs in
+    `SharedSupport` too — `build_app.sh` now copies it. Found by raising
+    `LogLevel` to 4 and reading the path dump at `pgAdmin3.cpp:467-472`; the
+    "Settings INI" line was empty. That path dump is the fastest way to check
+    any resource-location change, but note it only reaches the log at
+    `LogLevel == 4` (`LOG_DEBUG`) and there is no command-line flag for it —
+    the value has to be edited in `~/Library/Preferences/pgadmin3 Preferences`
+    while the app is **not** running, since wxFileConfig flushes over the file
+    on exit.
+  - **Building against wx 3.2.11 instead of `~/wx-cocoa-classic` works
+    unchanged.** `WX_COCOA_PREFIX=$HOME/opt/wx32
+    POSTGRESQL_PREFIX=/opt/homebrew/opt/libpq make build` produces a working,
+    self-contained `.app` (`otool -L` on the inner binary shows zero refs
+    outside the bundle). No source changes were needed for the older wx, and
+    the `wx/dynarray.h` patch the 2026-07-13 entry describes is not needed on
+    3.2.x — that bug is specific to wx 3.3's `wxVector`-backed `wxBaseArray`.
+    Useful as a fallback if a wx 3.3.x point release regresses.
+  - **Dark mode: the editor background was the missing half.**
+    `GetSQLColour()` already returned a dark lexer palette, but the five
+    editor colour getters (`ColourBackground`, `ColourForeground`,
+    `ColourCaret`, `CaretColourBackground`, `MarginBackgroundColour`) were
+    still unconditional light literals, so the dark palette was being drawn
+    onto a white editor. Added `sysSettings::IsDarkAppearance()` as one shared
+    accessor and pointed the existing inline
+    `wxSystemSettings::GetAppearance().IsUsingDarkBackground()` call at it too.
+    Caveat unchanged from before: the palette is read when the widget is
+    constructed, so the colour *defaults* still need an app restart after an
+    appearance switch even though the repaint fix from 2026-07-14 handles the
+    redraw.
