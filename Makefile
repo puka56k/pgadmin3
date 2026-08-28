@@ -34,7 +34,7 @@ ifeq ($(strip $(TYPOLIMA)),)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help build run release clean pngc docs-typo docs-typo-dry _ensure_typolima build-win
+.PHONY: help build run release clean pngc docs-typo docs-typo-dry _ensure_typolima build-win install dmg
 
 WINDOWS_RELEASE_VERSION ?= $(shell date +%Y.%m.%d)
 
@@ -43,6 +43,10 @@ help:
 	@echo ""
 	@echo "  make build   - configure + build pgAdmin3$(if $(filter Darwin,$(UNAME_S)), (also assembles a .app bundle),)"
 	@echo "  make run     - run a quick dev build directly (no .app bundling)"
+ifeq ($(UNAME_S),Darwin)
+	@echo "  make install - copy the built .app into /Applications"
+	@echo "  make dmg     - wrap the built .app in a drag-to-install .dmg"
+endif
 ifeq ($(UNAME_S),Darwin)
 	@echo "  make release - build, zip (macOS + Windows), tag, GitHub release + Homebrew tap update"
 endif
@@ -99,6 +103,25 @@ run:
 
 release:
 	@./macos/publish_release.sh
+
+dmg:
+	@./macos/make_dmg.sh $(BUILD_DIR_MACOS)
+
+# Replaces any previous copy outright: leaving a half-overwritten bundle behind
+# is worse than a clean reinstall, and the app keeps its settings either way
+# (they live in ~/Library/Preferences, not inside the bundle).
+install:
+	@test -d "$(BUILD_DIR_MACOS)/pgAdmin III.app" || \
+		{ echo "Error: $(BUILD_DIR_MACOS)/pgAdmin III.app not found. Run 'make build' first." >&2; exit 1; }
+	@pkill -f "pgAdmin III.app/Contents/MacOS/pgAdmin3" 2>/dev/null || true
+	@rm -rf "/Applications/pgAdmin III.app"
+	@cp -Rp "$(BUILD_DIR_MACOS)/pgAdmin III.app" /Applications/
+	@echo "Installed: /Applications/pgAdmin III.app"
+	@echo "  Launch from Launchpad or Spotlight, or:"
+	@echo "    open \"/Applications/pgAdmin III.app\""
+	@echo "  (use the full path, not 'open -a': the build tree holds a second"
+	@echo "   bundle with the same CFBundleIdentifier, so Launch Services is"
+	@echo "   free to pick either one)"
 
 clean:
 	rm -rf $(BUILD_DIR_MACOS)

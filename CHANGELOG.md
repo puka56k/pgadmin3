@@ -45,6 +45,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `explainShape`'s fill now tracks the canvas colour rather than
   `wxSYS_COLOUR_WINDOW`.
 
+### Added
+- macOS: `make install` copies the built bundle into `/Applications`, and
+  `make dmg` (new `macos/make_dmg.sh`) wraps it in a drag-to-install `.dmg`
+  next to the release `.zip` that `publish_release.sh` already produced. The
+  DMG carries an `/Applications` symlink so the usual drag gesture works, and
+  refuses to build if the bundle still links dylibs from outside itself —
+  which would launch on the build machine and die anywhere else. Both are
+  ad-hoc signed like the `.app`, so Gatekeeper on another Mac still wants a
+  right-click → Open.
+
 ### Fixed
 - Query tool: closing the window could crash (SIGSEGV in
   `wxTabFrame::DoSizing()` under `wxAuiManager::Update()`). Introduced by the
