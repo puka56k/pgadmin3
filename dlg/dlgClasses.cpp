@@ -150,6 +150,14 @@ void pgDialog::RestorePosition(int defaultX, int defaultY, int defaultW, int def
 
 void pgDialog::SavePosition()
 {
+	// pgAdmin3::OnExit() deletes `settings`, and wx calls OnExit() *before*
+	// wxAppBase::CleanUp() destroys the frames still sitting on the
+	// pending-delete list -- so a top-level window's own destructor arrives
+	// here with settings already gone. frmMain::~frmMain() guards its own
+	// writes the same way; this is the base-class half that was missed.
+	if (!settings)
+		return;
+
 #ifndef __WXGTK__
 	if (!IsIconized())
 	{
@@ -365,6 +373,14 @@ void pgFrame::RestorePosition(int defaultX, int defaultY, int defaultW, int defa
 
 void pgFrame::SavePosition()
 {
+	// pgAdmin3::OnExit() deletes `settings`, and wx calls OnExit() *before*
+	// wxAppBase::CleanUp() destroys the frames still sitting on the
+	// pending-delete list -- so a top-level window's own destructor arrives
+	// here with settings already gone. frmMain::~frmMain() guards its own
+	// writes the same way; this is the base-class half that was missed.
+	if (!settings)
+		return;
+
 #ifndef __WXGTK__
 	if (!IsIconized())
 	{

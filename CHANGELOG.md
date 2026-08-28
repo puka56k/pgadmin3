@@ -56,6 +56,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   right-click → Open.
 
 ### Fixed
+- Quitting the application could crash (SIGSEGV in
+  `sysSettings::WritePoint()`, reached from `pgFrame::~pgFrame()` ->
+  `SavePosition()`). `pgAdmin3::OnExit()` deletes the global `settings`, and wx
+  calls `OnExit()` before `wxAppBase::CleanUp()` destroys the frames still on
+  the pending-delete list -- so the main window's own destructor arrived with
+  `settings` already gone. `frmMain::~frmMain()` already guarded its own writes
+  against exactly this; `pgFrame::SavePosition()` and
+  `pgDialog::SavePosition()` now do too. Consequence, unchanged in kind from
+  what that existing guard already accepts: the main window's geometry is not
+  saved when the app quits.
 - Query tool: closing the window could crash (SIGSEGV in
   `wxTabFrame::DoSizing()` under `wxAuiManager::Update()`). Introduced by the
   per-SQL-tab output change below: `SqlBookClose()` runs
